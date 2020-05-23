@@ -1,8 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
 using Box2DX.Common;
+using Box2DX.Dynamics;
+using Box2DX.Collision;
 
+using Color = Microsoft.Xna.Framework.Color;
+
+using Asteroid.src.utils;
+using Asteroid.src.physics;
+using Asteroid.src.entities;
 
 namespace Asteroid
 {
@@ -10,11 +18,14 @@ namespace Asteroid
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
-        
+        List<IEntity> entities = new List<IEntity>(); 
+
+
         public Asteroid()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+            
         }
 
         /// <summary>
@@ -25,8 +36,11 @@ namespace Asteroid
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            graphics.PreferredBackBufferWidth = 1280;
+            graphics.PreferredBackBufferHeight = 720;
+            graphics.ApplyChanges();
 
+            SyncSimulation.Initialize();
             base.Initialize();
         }
 
@@ -61,7 +75,8 @@ namespace Asteroid
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
+
+            SyncSimulation.Step();
 
             base.Update(gameTime);
         }
@@ -73,7 +88,7 @@ namespace Asteroid
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-
+           
             // TODO: Add your drawing code here
 
             base.Draw(gameTime);
