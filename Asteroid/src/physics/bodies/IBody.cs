@@ -10,6 +10,7 @@ namespace Asteroid.src.physics.bodies
     interface IBody
     {
         BodyDef BodyDef { get; }
+        Body RealBody { get; }
         void Initialize(Body body);
     }
 }

@@ -33,8 +33,8 @@ namespace Asteroid.src.utils
             return new Vec2(xToWorld(x), yToWorld(y));
         }
 
-        static public Point ToScreen(Vec2 vec2) {
-            return new Point((int)xToScreen(vec2.X), (int)yToScreen(vec2.Y));
+        static public Vector2 ToScreen(Vec2 vec2) {
+            return new Vector2((int)xToScreen(vec2.X), (int)yToScreen(vec2.Y));
         }
     }
 }

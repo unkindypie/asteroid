@@ -12,6 +12,6 @@ namespace Asteroid.src.render
 {
     interface IRenderer
     {
-        void Render(IBody body, GraphicsDevice graphicsDevice);
+        void Render(IBody body, SpriteBatch spriteBatch);
     }
 }

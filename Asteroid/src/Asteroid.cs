@@ -11,21 +11,26 @@ using Color = Microsoft.Xna.Framework.Color;
 using Asteroid.src.utils;
 using Asteroid.src.physics;
 using Asteroid.src.entities;
+using Asteroid.src.worlds;
+using Asteroid.src.render;
 
 namespace Asteroid
 {
     public class Asteroid : Game
     {
+        readonly int WINDOW_WIDTH = 1280;
+        readonly int WINDOW_HEIGHT = 720;
+
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
-        List<IEntity> entities = new List<IEntity>(); 
 
+        BaseWorld world;
 
         public Asteroid()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            
+
         }
 
         /// <summary>
@@ -36,11 +41,42 @@ namespace Asteroid
         /// </summary>
         protected override void Initialize()
         {
-            graphics.PreferredBackBufferWidth = 1280;
-            graphics.PreferredBackBufferHeight = 720;
+            graphics.PreferredBackBufferWidth = WINDOW_WIDTH;
+            graphics.PreferredBackBufferHeight = WINDOW_HEIGHT;
             graphics.ApplyChanges();
 
+            // создаю матрицы проекции и вида
+            Camera.ViewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 6), Vector3.Zero, Vector3.Up);
+            Camera.ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
+                (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT,
+                1, 100);
+            // задаю шейдер и его настройки
+            Camera.CurrentEffect = new BasicEffect(GraphicsDevice);
+            Camera.CurrentEffect.VertexColorEnabled = true;
+            RasterizerState rs = new RasterizerState();
+            rs.CullMode = CullMode.None; // видно задние части полигонов
+            GraphicsDevice.RasterizerState = rs;
+            Camera.CurrentEffect.View = Camera.ViewMatrix;
+            Camera.CurrentEffect.Projection = Camera.ProjectionMatrix;
+
+            // старт физической симуляции
             SyncSimulation.Initialize();
+            // создание игрового мира
+            world = new SpaceWorld();
+            world.AddEntity(
+                new Box(
+                    new Vec2(0, 0),
+                    0.5f,
+                    0.5f
+                    ));
+
+            world.AddEntity(
+            new Box(
+                new Vec2(0, 0.6f),
+                0.5f,
+                0.5f
+                ));
+
             base.Initialize();
         }
 
@@ -65,32 +101,23 @@ namespace Asteroid
             // TODO: Unload any non ContentManager content here
         }
 
-        /// <summary>
-        /// Allows the game to run logic such as updating the world,
-        /// checking for collisions, gathering input, and playing audio.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-
+            world.Update(gameTime.ElapsedGameTime);
             SyncSimulation.Step();
-
+            
             base.Update(gameTime);
         }
 
-        /// <summary>
-        /// This is called when the game should draw itself.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-           
-            // TODO: Add your drawing code here
 
+            world.Render(gameTime.ElapsedGameTime, spriteBatch);
+           
             base.Draw(gameTime);
         }
     }
