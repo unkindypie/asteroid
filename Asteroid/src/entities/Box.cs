@@ -13,7 +13,7 @@ using Asteroid.src.physics.bodies;
 
 namespace Asteroid.src.entities
 {
-    class Box : IEntity
+    class Box : IEntity, IRenderable
     {
         BoxBody body;
         PolygonRenderer renderer;
@@ -25,11 +25,6 @@ namespace Asteroid.src.entities
         public Box(Vec2 position, float widthM, float heightM)
         {
             body = new BoxBody(position, widthM, heightM);
-        }
-
-        public void Update(TimeSpan elapsed)
-        {
-           
         }
 
         public void Render(TimeSpan elapsed, GraphicsDevice graphicsDevice)

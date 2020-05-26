@@ -40,7 +40,7 @@ namespace Asteroid.src.physics.bodies
                 Restitution = 1
             };
             // я положил сюда размеры, чтобы не загрязнять класс
-            Vec2 size = (Vec2)bodyDef.UserData; 
+            Vec2 size = (Vec2)bodyDef.UserData;
             // устанавливаю форму тела
             shapeDef.SetAsBox(size.X, size.Y);
             bodyDef.UserData = null;
