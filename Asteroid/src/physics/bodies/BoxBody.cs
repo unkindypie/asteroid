@@ -45,7 +45,7 @@ namespace Asteroid.src.physics.bodies
             shapeDef.SetAsBox(size.X, size.Y);
             bodyDef.UserData = null;
             body.CreateShape(shapeDef);
-            body.SetMassFromShapes(); // высчитывает массу по форме
+            body.SetMassFromShapes(); // высчитывает массу
         }
     }
 }

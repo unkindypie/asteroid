@@ -15,9 +15,9 @@ namespace Asteroid.src.physics
     static class SyncSimulation
     {
         static World box2dWorld;
-        static readonly float delta = 0.001666f;
-        static readonly int velocityIterations = 10;
-        static readonly int positionIterations = 8;
+        static readonly float delta = 0.01666f;
+        static readonly int velocityIterations = 8;
+        static readonly int positionIterations = 3;
         static bool isInitialized = false;
 
         public static void Initialize()
@@ -27,7 +27,7 @@ namespace Asteroid.src.physics
             AABB worldAABB = new AABB();
             worldAABB.LowerBound.Set(-100.0f, -100.0f);
             worldAABB.UpperBound.Set(100.0f, 100.0f);
-            box2dWorld = new World(worldAABB, new Vec2(0, -10), true);
+            box2dWorld = new World(worldAABB, new Vec2(0, -1), true);
 
             isInitialized = true;
         }

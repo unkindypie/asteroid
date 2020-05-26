@@ -32,10 +32,10 @@ namespace Asteroid.src.entities
            
         }
 
-        public void Render(TimeSpan elapsed, SpriteBatch spriteBatch)
+        public void Render(TimeSpan elapsed, GraphicsDevice graphicsDevice)
         {
-            if(renderer == null) renderer = new PolygonRenderer(Color.WhiteSmoke, 4, spriteBatch.GraphicsDevice);
-            Renderer.Render(Body, spriteBatch);
+            if(renderer == null) renderer = new PolygonRenderer(Color.WhiteSmoke, 4, graphicsDevice);
+            Renderer.Render(Body, graphicsDevice);
         }
     }
 }

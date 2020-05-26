@@ -12,6 +12,7 @@ namespace Asteroid.src.render
     {
         public static Matrix ViewMatrix { get; set; }
         public static Matrix ProjectionMatrix { get; set; }
+        public static Matrix DefaultWorldMatrix { get; set; }
         public static BasicEffect CurrentEffect { get; set; }
     }
 }

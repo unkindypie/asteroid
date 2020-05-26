@@ -16,6 +16,6 @@ namespace Asteroid.src.entities
         IBody Body { get; }
         IRenderer Renderer { get; }
         void Update(TimeSpan elapsed);
-        void Render(TimeSpan elapsed, SpriteBatch spriteBatch);
+        void Render(TimeSpan elapsed, GraphicsDevice graphicsDevice);
     }
 }

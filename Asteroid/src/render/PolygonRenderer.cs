@@ -49,12 +49,11 @@ namespace Asteroid.src.render
         // TODO IDEA: 
         // сделать так, чтобы цвет вершин по краям карты тускнел
         // и так же, чтобы края карты отталкивали игрока к центру
-        public void Render(IBody body, SpriteBatch spriteBatch)
+        public void Render(IBody body, GraphicsDevice graphicsDevice)
         {
             var boxBody = body as BoxBody;
             var shape = (PolygonShape)body.RealBody.GetShapeList();
 
-            var worldMatrix = Matrix.CreateWorld(new Vector3(0f, 0f, 0f), new Vector3(0, 0, -1), Vector3.Up);
 
             // перевод box2d вершин в экранные
 
@@ -67,16 +66,16 @@ namespace Asteroid.src.render
 
             vertexBuffer.SetData(vertices);
 
-            Camera.CurrentEffect.World = worldMatrix;
+            Camera.CurrentEffect.World = Camera.DefaultWorldMatrix;
             
-            spriteBatch.GraphicsDevice.SetVertexBuffer(vertexBuffer);
-            spriteBatch.GraphicsDevice.Indices = indexBuffer;
+            graphicsDevice.SetVertexBuffer(vertexBuffer);
+            graphicsDevice.Indices = indexBuffer;
 
 
             foreach (EffectPass pass in Camera.CurrentEffect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                spriteBatch.GraphicsDevice.DrawIndexedPrimitives(
+                graphicsDevice.DrawIndexedPrimitives(
                     PrimitiveType.LineList, 0, 0, vertIndexes.Length);
             }
         }

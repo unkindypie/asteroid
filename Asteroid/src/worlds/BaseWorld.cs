@@ -21,11 +21,11 @@ namespace Asteroid.src.worlds
                 entity.Update(elapsed);
             }
         }
-        public virtual void Render(TimeSpan elapsed, SpriteBatch spriteBatch)
+        public virtual void Render(TimeSpan elapsed, GraphicsDevice graphicsDevice)
         {
             foreach(IEntity entity in entities)
             {
-                entity.Render(elapsed, spriteBatch);
+                entity.Render(elapsed, graphicsDevice);
             }
         }
 
