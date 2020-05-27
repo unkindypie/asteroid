@@ -21,16 +21,16 @@ namespace Asteroid.src.utils
         // реальная высота экрана / на виртуальную
         static public float ScaleY { get; set; } = 1;
 
-        static public float virtualXtoWorld(float x)
+        static public float virtualXtoBox2DWorld(float x)
         {
             return x * PhysScalar;
         }
-        static public float virtualYtoWorld(float y)
+        static public float virtualYtoBox2DWorld(float y)
         {
             return (-y) * PhysScalar;
         }
 
-        static public float xToWorld(float x){
+        static public float realXtoBox2DWorld(float x){
             return x / ScaleX * PhysScalar;
         }
 
@@ -38,7 +38,7 @@ namespace Asteroid.src.utils
             return x / PhysScalar;
         }
 
-        static public float yToWorld(float y){
+        static public float realYtoBox2DWorld(float y){
             return (-y) / ScaleY * PhysScalar;
         }
 
@@ -46,19 +46,24 @@ namespace Asteroid.src.utils
             return (-y) / PhysScalar;
         }
 
-        static public Vec2 ToWorld(float x, float y) {
-            return new Vec2(xToWorld(x), yToWorld(y));
+        static public Vec2 RealToBox2DWorld(float x, float y) {
+            return new Vec2(realXtoBox2DWorld(x), realYtoBox2DWorld(y));
+        }
+
+        static public Vec2 VirtualToBox2DWorld(float x, float y)
+        {
+            return new Vec2(virtualXtoBox2DWorld(x), virtualYtoBox2DWorld(y));
         }
 
         static public Vector2 ToScreen(Vec2 vec2) {
             return new Vector2((int)xToScreen(vec2.X), (int)yToScreen(vec2.Y));
         }
 
-        static public Vector2 ScreenToWorldSpace(Vector2 point)
-        {
-            Matrix invertedMatrix = Matrix.Invert(Camera.ViewMatrix * Camera.ProjectionMatrix);
-            return Vector2.Transform(new Vector2(point.X, point.Y), invertedMatrix);
-        }
+        //static public Vector2 ScreenToWorldSpace(Vector2 point)
+        //{
+        //    Matrix invertedMatrix = Matrix.Invert(Camera.ViewMatrix * Camera.ProjectionMatrix);
+        //    return Vector2.Transform(new Vector2(point.X, point.Y), invertedMatrix);
+        //}
 
         static public Vec2 ToBox2dVec2(this Vector2 vec)
         {

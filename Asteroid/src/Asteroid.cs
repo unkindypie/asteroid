@@ -87,15 +87,8 @@ namespace Asteroid
             // старт физической симуляции
             SyncSimulation.Initialize();
             // создание игрового мира
-            world = new SpaceWorld();
-
-            world.AddEntity(
-                new Box(
-                    new Vec2(0, 0),
-                    Translator.virtualXtoWorld(50),
-                    Translator.virtualXtoWorld(50)
-                    ));
-
+            world = new SpaceWorld(new Vector2(VIRTUAL_WIDTH, VIRTUAL_HEIGHT), new Vector2(WINDOW_WIDTH, WINDOW_HEIGHT));
+            
             base.Initialize();
         }
 
@@ -126,16 +119,16 @@ namespace Asteroid
                 Exit();
             
             if(Mouse.GetState().LeftButton == ButtonState.Pressed &&
-                (gameTime.TotalGameTime - lastUpd) > new TimeSpan(0,0,0,0,400))
+                (gameTime.TotalGameTime - lastUpd) > new TimeSpan(0,0,0,0,50))
             {
                 var screenMP = Mouse.GetState().Position;
                 
                 world.AddEntity(
-               new Box(
-                   new Vec2(Translator.xToWorld(screenMP.X), Translator.yToWorld(screenMP.Y)),
-                   Translator.virtualXtoWorld(50),
-                   Translator.virtualXtoWorld(50)
-                   ));
+                   new Box(
+                       new Vec2(Translator.realXtoBox2DWorld(screenMP.X), Translator.realYtoBox2DWorld(screenMP.Y)),
+                       Translator.virtualXtoBox2DWorld(50),
+                       Translator.virtualXtoBox2DWorld(50)
+                       ));
                 lastUpd = gameTime.TotalGameTime;
             }
 
