@@ -17,5 +17,6 @@ namespace Asteroid.src.network
             }
         }
         public Vec2 Position { get; set; }
+        public byte Frame { get; set; }
     }
 }

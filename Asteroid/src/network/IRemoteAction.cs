@@ -13,5 +13,7 @@ namespace Asteroid.src.network
     interface IRemoteAction
     {
         RemoteActionType ActionType { get; }
+        byte Frame { get; set; }
+
     }
 }

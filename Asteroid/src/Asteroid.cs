@@ -5,17 +5,17 @@ using System.Collections.Generic;
 using Box2DX.Common;
 using Box2DX.Dynamics;
 using Box2DX.Collision;
-
 using Color = Microsoft.Xna.Framework.Color;
+using System.Diagnostics;
+using System;
+using System.Threading;
 
 using Asteroid.src.utils;
 using Asteroid.src.physics;
 using Asteroid.src.entities;
 using Asteroid.src.worlds;
 using Asteroid.src.render;
-using System.Diagnostics;
-using System;
-using System.Threading;
+using Asteroid.src.network;
 
 namespace Asteroid
 {
@@ -31,6 +31,7 @@ namespace Asteroid
         SpriteBatch spriteBatch;
 
         BaseWorld world;
+        Synchronizer synchronizer;
 
         public Asteroid()
         {
@@ -89,7 +90,8 @@ namespace Asteroid
             SyncSimulation.Initialize();
             // создание игрового мира
             world = new SpaceWorld(new Vector2(VIRTUAL_WIDTH, VIRTUAL_HEIGHT), new Vector2(WINDOW_WIDTH, WINDOW_HEIGHT));
-            
+            synchronizer = new Synchronizer(world);
+
             base.Initialize();
         }
 
@@ -118,31 +120,16 @@ namespace Asteroid
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-            
-            if (Mouse.GetState().LeftButton == ButtonState.Pressed &&
-                (gameTime.TotalGameTime - lastUpd) > new TimeSpan(0,0,0,0,150))
-            {
-                var screenMP = Mouse.GetState().Position;
-                world.AddEntity(
-                   new Box(
-                       new Vec2(Translator.realXtoBox2DWorld(screenMP.X), Translator.realYtoBox2DWorld(screenMP.Y)),
-                       Translator.virtualXtoBox2DWorld(50),
-                       Translator.virtualXtoBox2DWorld(50)
-                       ));
-                lastUpd = gameTime.TotalGameTime;
-            }
 
-            world.Update(gameTime.ElapsedGameTime);
-            SyncSimulation.Step();
-            
+            synchronizer.Update(gameTime);
+
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-            world.Render(gameTime.ElapsedGameTime, GraphicsDevice);
-
+            world.Render(gameTime, GraphicsDevice);
             base.Draw(gameTime);
         }
     }

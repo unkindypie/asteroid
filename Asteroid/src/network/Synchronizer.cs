@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 
 using Asteroid.src.worlds;
 using Asteroid.src.physics;
+using Asteroid.src.input;
 
 namespace Asteroid.src.network
 {
@@ -13,8 +15,9 @@ namespace Asteroid.src.network
     class Synchronizer
     {
         BaseWorld world;
-        ushort checkpointInterval = 5;
-        ushort curFrame = 0;
+        ActionGeneratorsManager inputManager;
+        byte checkpointInterval = 5;
+        byte curFrame = 0;
         ulong lastCheckpoint;
 
         object pendingToExecutionStacksCoppyingLock = 42; //объект синхронизации для критической секции
@@ -25,9 +28,16 @@ namespace Asteroid.src.network
             this.world = world;
             //на каждый кадр по своему стеку
             executionStacks = new List<IRemoteAction>[checkpointInterval];
+            for(byte i = 0; i < checkpointInterval; i++)
+            {
+                executionStacks[i] = new List<IRemoteAction>();
+            }
+
+            inputManager = new ActionGeneratorsManager(checkpointInterval);
+            world.Initialize(inputManager);
         }
 
-        public void Update(TimeSpan elapsed)
+        public void Update(GameTime elapsed)
         {
             if(curFrame % checkpointInterval == 0)
             {
@@ -35,30 +45,21 @@ namespace Asteroid.src.network
                 lastCheckpoint++;
                 //сливаю в executionStacks инпуты с буфера класса, работающего с 
                 // сетью и протоколом
+                executionStacks = inputManager.GeneratedActions;
+                inputManager.ClearActions();
             }
-
+            //тут генерируется инпут
+            inputManager.Update(elapsed, curFrame);
             //применяю инпут, который должен быть применен в этом кадре
             foreach (IRemoteAction actionData in executionStacks[curFrame])
             {
-                ExecuteAction(actionData);
+                world.ExecuteAction(actionData);
             }
             executionStacks[curFrame].Clear();
 
             world.Update(elapsed);
             SyncSimulation.Step();
             curFrame++;
-        }
-
-        void ExecuteAction(IRemoteAction action)
-        {
-            switch (action)
-            {
-                case SpawnBoxAction a:
-                    // TODO
-                    break;
-                default:
-                    break;
-            }
         }
     }
 }

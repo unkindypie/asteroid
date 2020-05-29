@@ -27,7 +27,7 @@ namespace Asteroid.src.entities
             body = new BoxBody(position, widthM, heightM);
         }
 
-        public void Render(TimeSpan elapsed, GraphicsDevice graphicsDevice)
+        public void Render(GameTime elapsed, GraphicsDevice graphicsDevice)
         {
             if(renderer == null) renderer = new PolygonRenderer(Color.WhiteSmoke, 4, graphicsDevice);
             Renderer.Render(Body, graphicsDevice);

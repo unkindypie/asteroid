@@ -66,13 +66,12 @@
     <Compile Include="src\Asteroid.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="src\CurrentPlayer.cs" />
     <Compile Include="src\entities\InvisibleBorder.cs" />
     <Compile Include="src\entities\Box.cs" />
     <Compile Include="src\entities\IEntity.cs" />
     <Compile Include="src\entities\IRenderable.cs" />
-    <Compile Include="src\entities\IUpdateable.cs" />
-    <Compile Include="src\input\InputManager.cs" />
+    <Compile Include="src\entities\INeedsUpdate.cs" />
+    <Compile Include="src\input\ActionGeneratorsManager.cs" />
     <Compile Include="src\network\IRemoteAction.cs" />
     <Compile Include="src\network\Parser.cs" />
     <Compile Include="src\network\SpawnBoxAction.cs" />
