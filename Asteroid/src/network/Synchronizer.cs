@@ -13,35 +13,52 @@ namespace Asteroid.src.network
     class Synchronizer
     {
         BaseWorld world;
-        long checkpointInterval = 5;
-        long curFrame = 0;
+        ushort checkpointInterval = 5;
+        ushort curFrame = 0;
+        ulong lastCheckpoint;
 
-        object queueAddingLockObj = 42; //объект синхронизации для критической секции
-        List<RemoteActionData> actionsQueue = new List<RemoteActionData>();
+        object pendingToExecutionStacksCoppyingLock = 42; //объект синхронизации для критической секции
+        List<IRemoteAction>[] executionStacks;
        
-
-
         public Synchronizer(BaseWorld world)
         {
             this.world = world;
+            //на каждый кадр по своему стеку
+            executionStacks = new List<IRemoteAction>[checkpointInterval];
         }
+
         public void Update(TimeSpan elapsed)
         {
             if(curFrame % checkpointInterval == 0)
             {
-                lock(queueAddingLockObj)
-                {
-                    foreach (RemoteActionData remoteActionData in actionsQueue)
-                    {
-                        Parser.Handle(remoteActionData, world);
-                    }
-                    actionsQueue.Clear();
-                }
-
+                curFrame = 0;
+                lastCheckpoint++;
+                //сливаю в executionStacks инпуты с буфера класса, работающего с 
+                // сетью и протоколом
             }
+
+            //применяю инпут, который должен быть применен в этом кадре
+            foreach (IRemoteAction actionData in executionStacks[curFrame])
+            {
+                ExecuteAction(actionData);
+            }
+            executionStacks[curFrame].Clear();
+
             world.Update(elapsed);
             SyncSimulation.Step();
             curFrame++;
+        }
+
+        void ExecuteAction(IRemoteAction action)
+        {
+            switch (action)
+            {
+                case SpawnBoxAction a:
+                    // TODO
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }

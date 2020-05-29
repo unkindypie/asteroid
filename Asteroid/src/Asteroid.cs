@@ -15,6 +15,7 @@ using Asteroid.src.worlds;
 using Asteroid.src.render;
 using System.Diagnostics;
 using System;
+using System.Threading;
 
 namespace Asteroid
 {
@@ -118,11 +119,10 @@ namespace Asteroid
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
             
-            if(Mouse.GetState().LeftButton == ButtonState.Pressed &&
-                (gameTime.TotalGameTime - lastUpd) > new TimeSpan(0,0,0,0,50))
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed &&
+                (gameTime.TotalGameTime - lastUpd) > new TimeSpan(0,0,0,0,150))
             {
                 var screenMP = Mouse.GetState().Position;
-                
                 world.AddEntity(
                    new Box(
                        new Vec2(Translator.realXtoBox2DWorld(screenMP.X), Translator.realYtoBox2DWorld(screenMP.Y)),
