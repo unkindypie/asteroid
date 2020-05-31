@@ -72,7 +72,11 @@
     <Compile Include="src\entities\IRenderable.cs" />
     <Compile Include="src\entities\INeedsUpdate.cs" />
     <Compile Include="src\input\ActionGeneratorsManager.cs" />
+    <Compile Include="src\network\MemberPackage.cs" />
     <Compile Include="src\network\IRemoteAction.cs" />
+    <Compile Include="src\network\NetGameClient.cs" />
+    <Compile Include="src\network\NetGameServer.cs" />
+    <Compile Include="src\network\NetService.cs" />
     <Compile Include="src\network\Parser.cs" />
     <Compile Include="src\network\SpawnBoxAction.cs" />
     <Compile Include="src\network\Synchronizer.cs" />
@@ -80,6 +84,7 @@
     <Compile Include="src\render\PolygonRenderer.cs" />
     <Compile Include="src\render\Camera.cs" />
     <Compile Include="src\render\IRenderer.cs" />
+    <Compile Include="src\utils\SynchronizedList.cs" />
     <Compile Include="src\utils\Translator.cs" />
     <Compile Include="src\physics\bodies\BoxBody.cs" />
     <Compile Include="src\physics\bodies\IBody.cs" />

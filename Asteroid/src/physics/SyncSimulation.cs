@@ -15,7 +15,7 @@ namespace Asteroid.src.physics
     static class SyncSimulation
     {
         static World box2dWorld;
-        static readonly float delta = 0.01666f;
+        static public readonly float Delta = 0.01666f;
         static readonly int velocityIterations = 8;
         static readonly int positionIterations = 3;
         static bool isInitialized = false;
@@ -34,7 +34,7 @@ namespace Asteroid.src.physics
 
         public static void Step()
         {
-            box2dWorld.Step(delta, velocityIterations, positionIterations);
+            box2dWorld.Step(Delta, velocityIterations, positionIterations);
         }
 
         static public void AddBody(IBody body)
