@@ -8,20 +8,24 @@ namespace Asteroid.src.network
 {
     enum MemberPackageType
     {
-        RoomEnterRequest,
-        Acknowledgment,
-        RemoteAction
+        RoomEnterRequest = 1545611,
+        Acknowledgment = 412577,
+        RemoteAction = 6698898,
+        BroadcastScanning = 445454,
     }
+    //типы сообщений от учасника комнаты к серверу
     class RoomEnterRequest
     {
         public string Username { get; set; }
-        public ushort RecvPort { get; set; }
     }
     class Acknowledgment
     {
         public ulong Checkpoint { get; set; }
         public ushort AverageFrameExecutionTime { get; set; } 
     }
+    //и еще есть IRemoteAction
+
+    //класс пакета учасника
     class MemberPackage
     {
         public MemberPackageType PackageType { get; set; }
@@ -30,17 +34,19 @@ namespace Asteroid.src.network
         {
             Data = data;
         }
+
         public object Parse()
         {
             PackageType = (MemberPackageType)BitConverter.ToInt32(Data, 0);
 
             switch (PackageType)
             {
+                case MemberPackageType.BroadcastScanning:
+                    return null;
                 case MemberPackageType.RoomEnterRequest:
                     int nameLen = BitConverter.ToInt32(Data, 4);
                     return new RoomEnterRequest() {
-                        RecvPort = BitConverter.ToUInt16(Data, 8),
-                        Username = Encoding.Unicode.GetString(Data, 10, nameLen),
+                        Username = Encoding.Unicode.GetString(Data, 8, nameLen),
                     };
                 case MemberPackageType.Acknowledgment:
                     return new Acknowledgment() {
@@ -48,10 +54,25 @@ namespace Asteroid.src.network
                         AverageFrameExecutionTime = BitConverter.ToUInt16(Data, 12)
                     };
                 case MemberPackageType.RemoteAction:
-                    return Parser.Parse(Data.Skip(4).ToArray());
+                    return Parser.ParseAction(Data.Skip(4).ToArray());
                 default:
                     return null;
             }
         }
+
+        public byte[] GetBytes()
+        {
+            byte[] result = BitConverter.GetBytes((int)PackageType);
+            switch (PackageType)
+            {
+
+                case MemberPackageType.BroadcastScanning:
+                default:
+                    return result;
+            }
+        }
+
+        static public MemberPackage BroadcastScanningPackage => 
+            new MemberPackage(new byte[0]) { PackageType = MemberPackageType.BroadcastScanning };
     }
 }

@@ -11,14 +11,14 @@ using Asteroid.src.network;
 namespace Asteroid.src.input
 {
     //каждый обработчик возвращает данные действия
-    delegate IRemoteAction MouseClickListener(MouseState mouseState);
+    delegate RemoteActionBase MouseClickListener(MouseState mouseState);
     //Класс занимается хранением и вызовом обработчиков ивентов ввода, которые будут
     // генерирвоать IRemoteAction'ы для дальнейшей их отправки владельцу комнаты и выполнения
     class ActionGeneratorsManager
     {
         List<MouseClickListener> mouseClickEventListeners = new List<MouseClickListener>();
         TimeSpan lastClickUpd = new TimeSpan(0);
-        List<IRemoteAction>[] ownActions;
+        List<RemoteActionBase>[] ownActions;
         byte checkpointInterval;
 
         public ActionGeneratorsManager(byte checkpointInterval)
@@ -27,7 +27,7 @@ namespace Asteroid.src.input
             ClearActions();
         }
 
-        public List<IRemoteAction>[] GeneratedActions
+        public List<RemoteActionBase>[] GeneratedActions
         {
             get
             {
@@ -36,10 +36,10 @@ namespace Asteroid.src.input
         }
 
         public void ClearActions() {
-            ownActions = new List<IRemoteAction>[checkpointInterval];
+            ownActions = new List<RemoteActionBase>[checkpointInterval];
             for (byte i = 0; i < checkpointInterval; i++)
             {
-                ownActions[i] = new List<IRemoteAction>();
+                ownActions[i] = new List<RemoteActionBase>();
             }
         }
 

@@ -73,7 +73,7 @@
     <Compile Include="src\entities\INeedsUpdate.cs" />
     <Compile Include="src\input\ActionGeneratorsManager.cs" />
     <Compile Include="src\network\MemberPackage.cs" />
-    <Compile Include="src\network\IRemoteAction.cs" />
+    <Compile Include="src\network\RemoteActionBase.cs" />
     <Compile Include="src\network\NetGameClient.cs" />
     <Compile Include="src\network\NetGameServer.cs" />
     <Compile Include="src\network\NetService.cs" />
@@ -153,6 +153,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="app.manifest" />
+    <None Include="ClassDiagram1.cd" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />

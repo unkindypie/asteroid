@@ -28,9 +28,9 @@ namespace Asteroid.src.network
         Socket recieveSocket;
         //для владельца - тут лежат свои действия и действия, отправленные пользователями
         //для учасника тут будут лежать отпарсенные данные от владельца
-        List<IRemoteAction>[] confirmedActions;
+        List<RemoteActionBase>[] confirmedActions;
         //временное хранилище
-        List<IRemoteAction>[] pendingActions;
+        List<RemoteActionBase>[] pendingActions;
         byte checkpointInterval;
 
         public NetService(NetServiceType serviceType, byte checkpointInterval)
@@ -38,12 +38,12 @@ namespace Asteroid.src.network
             this.serviceType = serviceType;
             this.checkpointInterval = checkpointInterval;
 
-            confirmedActions = new List<IRemoteAction>[checkpointInterval];
-            pendingActions = new List<IRemoteAction>[checkpointInterval];
+            confirmedActions = new List<RemoteActionBase>[checkpointInterval];
+            pendingActions = new List<RemoteActionBase>[checkpointInterval];
             for (byte i = 0; i < checkpointInterval; i++)
             {
-                confirmedActions[i] = new List<IRemoteAction>();
-                pendingActions[i] = new List<IRemoteAction>();
+                confirmedActions[i] = new List<RemoteActionBase>();
+                pendingActions[i] = new List<RemoteActionBase>();
             }
 
             if (serviceType == NetServiceType.RoomMember)
@@ -61,7 +61,7 @@ namespace Asteroid.src.network
         // будет ожидание, пока все подтвердят получение confirmedActions
         //если это учасник, то в другом потоке в крит секции будет ожидание получения
         //confirmedActions'ов владельца
-        public List<IRemoteAction>[] RecieveActions()
+        public List<RemoteActionBase>[] RecieveActions()
         {
             if (didActionsRecieved) return confirmedActions;
 
@@ -71,7 +71,7 @@ namespace Asteroid.src.network
             }
         }
         //отправляет IRemoteAction владельцу либо сохраняет, если это владелец
-        public void RegisterAction(IRemoteAction action, byte frame)
+        public void RegisterAction(RemoteActionBase action, byte frame)
         {
             if (serviceType == NetServiceType.RoomMember)
             {

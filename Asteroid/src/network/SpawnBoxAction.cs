@@ -7,16 +7,17 @@ using System.Threading.Tasks;
 
 namespace Asteroid.src.network
 {
-    class SpawnBoxAction : IRemoteAction
+    [Serializable]
+    class SpawnBoxAction : RemoteActionBase
     {
-        public RemoteActionType ActionType
-        {
-            get
-            {
-                return RemoteActionType.SpawnBox;
-            }
-        }
+        //public override RemoteActionType ActionType
+        //{
+        //    get
+        //    {
+        //        return RemoteActionType.SpawnBox;
+        //    }
+        //}
         public Vec2 Position { get; set; }
-        public byte Frame { get; set; }
+
     }
 }

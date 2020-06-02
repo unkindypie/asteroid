@@ -10,65 +10,107 @@ using System.Collections.Concurrent;
 
 using Asteroid.src.physics;
 using Asteroid.src.utils;
+using System.Diagnostics;
 
 namespace Asteroid.src.network
 {
-    class SharedThreadScope
+    class RoomInfo
     {
-        byte checkpointInterval;
+        /// <summary>
+        /// OwnersName - ASCII string
+        /// </summary>
+        public string OwnersName { get; set; }  
+        public byte UserCount { get; set; }
+        public byte MaxUserCount { get; set; }
 
-        public int SleepTime { get; set; } // мс
-        public ulong CurrentCheckpoint { get; set; }
-        public int UserCount { get; set; }
-        public SynchronizedList<SynchronizedList<IRemoteAction>> accumulatedActions;
-        public SynchronizedList<RoomMember> members;
-
-
-        public byte CheckpointInterval {
-            get
-            {
-                return checkpointInterval;
-            }
-        }
-
-        public SharedThreadScope(byte checkpointInterval)
+        public static RoomInfo FromBytes(byte[] data)
         {
-            this.checkpointInterval = checkpointInterval;
-            accumulatedActions = new SynchronizedList<SynchronizedList<IRemoteAction>>();
-            for (byte i = 0; i < checkpointInterval; i++)
-            {
-                accumulatedActions.Add(new SynchronizedList<IRemoteAction>());
-            }
-            members = new SynchronizedList<RoomMember>();
+            var r = new RoomInfo();
+            r.OwnersName = Encoding.ASCII.GetString(data, 4, BitConverter.ToInt32(data, 0));
+            r.MaxUserCount = data[r.OwnersName.Length + 4];
+            r.MaxUserCount = data[r.OwnersName.Length + 5];
+            return r;
         }
-    }
-    class RoomMember
-    {
-        public IPEndPoint SendEndPoint { get; set; }
-        public IPEndPoint RecvEndPoint { get; set; }
-        public ulong LastAcknowlegmentCheckpoint { get; set; } = 0;
-        public int AverageFrameTime { get; set; } = 0;
+        public byte[] GetBytes()
+        {
+            if(OwnersName.Length > 20)
+            {
+                OwnersName = OwnersName.Substring(0, 20);
+            }  
+            return BitConverter
+                .GetBytes(OwnersName.Length)
+                .Concat(Encoding.ASCII.GetBytes(OwnersName))
+                .Concat(new byte[] { UserCount, MaxUserCount }).ToArray();
+        }
     }
     class NetGameServer
     {
         static public readonly ushort RoomHostPort = 2557;
+        static public readonly byte MaxUserCount = 4;
         byte checkpointInterval;
         Thread senderThread;
         Thread recieverThread;
 
+        //нужен чтобы расшаривать ресурсы между тредами
         SharedThreadScope scope;
+        class SharedThreadScope
+        {
+            byte checkpointInterval;
+            int sleepTime;
+            int maxSleepTime;
+            string ownerName;
+
+            public int SleepTime => sleepTime; // мс
+            public int MaxSleepTime => maxSleepTime;
+            public ulong CurrentCheckpoint { get; set; }
+            public byte UserCount { get; set; }
+            public SynchronizedList<SynchronizedList<RemoteActionBase>> accumulatedActions;
+            public SynchronizedList<RoomMember> members;
+            public UdpClient client;
+            public bool IsInSynchronizationState = false;
+            public string OwnerName => ownerName;
+            public byte CheckpointInterval
+            {
+                get
+                {
+                    return checkpointInterval;
+                }
+            }
+
+            public SharedThreadScope(byte checkpointInterval, int sleepTime, string ownerName)
+            {
+                this.checkpointInterval = checkpointInterval;
+                this.sleepTime = sleepTime;
+                maxSleepTime = (int)(maxSleepTime * 1.15);
+                this.ownerName = ownerName;
+
+                accumulatedActions = new SynchronizedList<SynchronizedList<RemoteActionBase>>();
+                for (byte i = 0; i < checkpointInterval; i++)
+                {
+                    accumulatedActions.Add(new SynchronizedList<RemoteActionBase>());
+                }
+                members = new SynchronizedList<RoomMember>();
+            }
+        }
+        class RoomMember
+        {
+            public IPEndPoint EndPoint { get; set; }
+            public ulong LastAcknowlegmentCheckpoint { get; set; } = 0;
+            public int AverageFrameTime { get; set; } = 0;
+        }
 
 
-        public NetGameServer(byte checkpointInterval)
+        public NetGameServer(byte checkpointInterval, string ownerName = "Mr. Smith")
         {
             this.checkpointInterval = checkpointInterval;
-           
+
             //общая область вызова для потоков
-            scope = new SharedThreadScope(checkpointInterval)
-            { 
-                SleepTime = (int)(SyncSimulation.Delta),
-                CurrentCheckpoint = 0
+            scope = new SharedThreadScope(checkpointInterval, (int)(SyncSimulation.Delta * 1000), ownerName)
+            {
+                CurrentCheckpoint = 0,
+                client = new UdpClient(RoomHostPort),
             };
+            scope.client.EnableBroadcast = true;
         }
 
         public void StartSending()
@@ -78,67 +120,137 @@ namespace Asteroid.src.network
             senderThread.Start(scope);
         }
 
+        public void Listen()
+        {
+            recieverThread = new Thread(ReceiverFunction);
+            recieverThread.IsBackground = true;
+            recieverThread.Start(scope);
+        }
+
         static void SenderFunction(object arg)
         {
             SharedThreadScope scope = (SharedThreadScope)arg;
             DateTime sendingStarted;
-            UdpClient udpClient = new UdpClient();
 
+            //TODO: избавиться от averageTime, если на клиенте все всегда работает быстро за 0 мс
             while (true)
             {
                 sendingStarted = DateTime.Now;
                 // высчитывание времени сна(зависит от среднего времени кадра) и отправка 
                 int averageTime = 0;
-                foreach(RoomMember member in scope.members)
+                scope.IsInSynchronizationState = true;
+
+                byte[] sActions = Parser.SerealizeAccumulatedActions(scope.accumulatedActions);
+
+                foreach (RoomMember member in scope.members)
                 {
                     averageTime += member.AverageFrameTime;
+
                     // отправка собранных действий
-                    //udpClient.Send(..., ..., member.EndPoint);
+                    scope.client.Send(sActions, sActions.Length);
                 }
-                averageTime /= scope.members.Count;
+
+                foreach (var frame in scope.accumulatedActions) frame.Clear();
+
+                if(scope.members.Count != 0) averageTime /= scope.members.Count;
 
                 scope.CurrentCheckpoint++;
-                Thread.Sleep(
-                    // 1000/60
-                    (scope.SleepTime + 
+                scope.IsInSynchronizationState = false;
+ 
+                int waitingTime =  // 1000/60
+                    (scope.SleepTime +
                     // плюс среднее время выполнения кадра у пользователей
-                    averageTime) * scope.CheckpointInterval - 
+                    averageTime) * scope.CheckpointInterval -
                     // минус время выполнения тика SenderFunction
-                    (int)((DateTime.Now - sendingStarted).TotalMilliseconds));
+                    (int)((DateTime.Now - sendingStarted).TotalMilliseconds);
+
+                Debug.WriteLine($"Sender update: {waitingTime} ms, {sActions.Length} b", "server");
+
+                Thread.Sleep(
+                    waitingTime  < 0 ? 0 : (waitingTime > 80 ? 80 : waitingTime)
+                   );
             }
         }
+
         static void ReceiverFunction(object arg)
         {
             SharedThreadScope scope = (SharedThreadScope)arg;
-            UdpClient udpClient = new UdpClient(RoomHostPort);
-
+            //этот список нужен, чтобы не овечать каждый раз на BroadcastScanning 
+            // от одного и того же ep
+            SynchronizedList<Tuple<IPEndPoint, DateTime>> broadcastingMeets 
+                = new SynchronizedList<Tuple<IPEndPoint, DateTime>>();
             while (true)
             {
                 IPEndPoint remoteEndPoint = null;
-                byte[] received = udpClient.Receive(ref remoteEndPoint);
-                //todo: мб стоит выделить по сокету и треду на каждого юзера, хз как лучше
-                MemberPackage _memberPackage = new MemberPackage(received);
-                var memberPackage = _memberPackage.Parse();
-                switch (_memberPackage.PackageType)
-                {
-                    case MemberPackageType.RoomEnterRequest:
-                        //запись в member.RecvEndPoint его endpoint'а по проту
-                        break;
-                    case MemberPackageType.Acknowledgment:
-                        foreach(RoomMember member in scope.members)
-                        {
-                            //обработка подтверждения
-                            if(member.SendEndPoint == remoteEndPoint)
+                byte[] received = scope.client.Receive(ref remoteEndPoint);
+                if (scope.IsInSynchronizationState) continue;
+                //отправляю обработку в тредпул
+                Task.Run(() => {
+                    if (scope.IsInSynchronizationState) return;
+                    MemberPackage memberPackage = new MemberPackage(received);
+                    var memberPackageContent = memberPackage.Parse();
+                    switch (memberPackage.PackageType)
+                    {
+                        case MemberPackageType.BroadcastScanning:
+                            // если этот EP уже недавно слал BroadcastScanning,
+                            // то ему ответ не слать
+                            var now = DateTime.Now;
+                            broadcastingMeets.RemoveAll(t => (now - t.Item2).TotalMilliseconds > 1000);
+                            foreach(var t in broadcastingMeets)
                             {
-                                var acknowledgment = (Acknowledgment)memberPackage;
-                                member.AverageFrameTime = acknowledgment.AverageFrameExecutionTime;
-                                member.LastAcknowlegmentCheckpoint = acknowledgment.Checkpoint;
+                                if (t.Item1.Address.GetHashCode() == remoteEndPoint.Address.GetHashCode())
+                                {
+                                    Debug.WriteLine("already have it");
+                                    return;
+                                }
+                                
                             }
-                        }
-                        break;
-                    case MemberPackageType.RemoteAction:
-                        break;
-                }
+                            broadcastingMeets.Add(new Tuple<IPEndPoint, DateTime>(remoteEndPoint, now));
+                            //отправляю данные о комнате
+                            var roomInfo = (new RoomInfo()
+                            {
+                                OwnersName = scope.OwnerName,
+                                MaxUserCount = MaxUserCount,
+                                UserCount = scope.UserCount,
+                            }).GetBytes();
+                            Debug.WriteLine("Answering to broadcast from " + remoteEndPoint.ToString(), "server");
+                            scope.client.Send(roomInfo, roomInfo.Length, remoteEndPoint);
+                            break;
+                        case MemberPackageType.RoomEnterRequest:
+                            //добавляю в комнату
+                            if(scope.members.Count < MaxUserCount)
+                            {
+                                scope.members.Add(new RoomMember()
+                                {
+                                    EndPoint = remoteEndPoint
+                                });
+
+                                if(scope.members.Count >= MaxUserCount)
+                                    scope.client.EnableBroadcast = false;
+                            }
+                            break;
+                        case MemberPackageType.Acknowledgment:
+                            foreach (RoomMember member in scope.members)
+                            {
+                                //обработка подтверждения
+                                if (member.EndPoint == remoteEndPoint)
+                                {
+                                    var acknowledgment = (Acknowledgment)memberPackageContent;
+                                    member.AverageFrameTime = acknowledgment.AverageFrameExecutionTime;
+                                    member.LastAcknowlegmentCheckpoint = acknowledgment.Checkpoint;
+                                }
+                            }
+                            break;
+                        case MemberPackageType.RemoteAction:
+                            //TODO: контролить ситуацию, когда юзер спамит RemoteAction'ами
+                            var action = (RemoteActionBase)memberPackageContent;
+                            if (action.Checkpoint >= scope.CurrentCheckpoint)
+                            {
+                                scope.accumulatedActions[action.Frame].Add(action);
+                            }
+                            break;
+                    }
+                });  
             }
         }
     }

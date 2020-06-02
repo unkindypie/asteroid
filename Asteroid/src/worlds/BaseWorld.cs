@@ -31,8 +31,12 @@ namespace Asteroid.src.worlds
         //хранит обработчики ввода пользователя, которые генерируют IRemoteAction'ы
         protected ActionGeneratorsManager inputManager;
         //хранит функции, которые выполняют ивенты из IRemoteAction'ов
-        protected Dictionary<Type, Action<IRemoteAction>> executors
-            = new Dictionary<Type, Action<IRemoteAction>>();
+        protected Dictionary<Type, Action<RemoteActionBase>> executors
+            = new Dictionary<Type, Action<RemoteActionBase>>();
+        //сетевой клиент для отправки RemoteAction'сов на сервер и сканирования доступных серверов
+        protected NetGameClient netClient = new NetGameClient();
+
+        public NetGameClient NetClient => netClient;
 
         // вызывается из Synchronizer
         public abstract void Initialize(ActionGeneratorsManager inputManager);
@@ -82,15 +86,17 @@ namespace Asteroid.src.worlds
             SyncSimulation.DestroyBody(entity.Body);
         }
 
-        public void ExecuteAction(IRemoteAction remoteAction)
+        public void ExecuteAction(RemoteActionBase remoteAction)
         {
             //вызываю обработчик
             executors[remoteAction.GetType()](remoteAction);
         }
 
-        public void AddExecutor(Type actionType, Action<IRemoteAction> executor)
+        public void AddExecutor(Type actionType, Action<RemoteActionBase> executor)
         {
             executors.Add(actionType, executor);
         }
+
+        
     }
 }

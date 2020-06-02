@@ -54,6 +54,14 @@ namespace Asteroid.src.utils
             }
         }
 
+        public void RemoveAll(Predicate<T> match)
+        {
+            lock(_root)
+            {
+                _list.RemoveAll(match);
+            }
+        }
+
         public bool Contains(T item)
         {
             lock (_root)

@@ -83,7 +83,7 @@ namespace Asteroid.src.worlds
         }
         void AddActionExecutors()
         {
-            AddExecutor(typeof(SpawnBoxAction), (IRemoteAction _action) =>
+            AddExecutor(typeof(SpawnBoxAction), (RemoteActionBase _action) =>
             {
                 var action = (SpawnBoxAction)_action;
                 AddEntity(
