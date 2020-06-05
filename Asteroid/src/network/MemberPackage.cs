@@ -9,20 +9,29 @@ namespace Asteroid.src.network
     enum MemberPackageType
     {
         RoomEnterRequest = 1545611,
-        Acknowledgment = 412577,
+        ActionsAcknowledgment = 412577,
         RemoteAction = 6698898,
         BroadcastScanning = 445454,
     }
     //типы сообщений от учасника комнаты к серверу
     class RoomEnterRequest
     {
-        public string Username { get; set; }
+        //ASCII
+        public string Username { get; set; } = "";
+        public byte[] GetBytes()
+        {
+            return BitConverter
+                .GetBytes(Username.Length)
+                .Concat(Encoding.ASCII.GetBytes(Username)).ToArray();
+        }
     }
-    class Acknowledgment
+    class ActionsAcknowledgment
     {
         public ulong Checkpoint { get; set; }
-        public ushort AverageFrameExecutionTime { get; set; } 
+        public ushort AverageFrameExecutionTime { get; set; }
+        
     }
+
     //и еще есть IRemoteAction
 
     //класс пакета учасника
@@ -48,8 +57,8 @@ namespace Asteroid.src.network
                     return new RoomEnterRequest() {
                         Username = Encoding.Unicode.GetString(Data, 8, nameLen),
                     };
-                case MemberPackageType.Acknowledgment:
-                    return new Acknowledgment() {
+                case MemberPackageType.ActionsAcknowledgment:
+                    return new ActionsAcknowledgment() {
                         Checkpoint = BitConverter.ToUInt64(Data, 4),
                         AverageFrameExecutionTime = BitConverter.ToUInt16(Data, 12)
                     };
@@ -65,7 +74,8 @@ namespace Asteroid.src.network
             byte[] result = BitConverter.GetBytes((int)PackageType);
             switch (PackageType)
             {
-
+                case MemberPackageType.RoomEnterRequest:
+                    return result.Concat(Data).ToArray();
                 case MemberPackageType.BroadcastScanning:
                 default:
                     return result;

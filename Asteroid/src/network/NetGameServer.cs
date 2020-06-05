@@ -14,35 +14,8 @@ using System.Diagnostics;
 
 namespace Asteroid.src.network
 {
-    class RoomInfo
-    {
-        /// <summary>
-        /// OwnersName - ASCII string
-        /// </summary>
-        public string OwnersName { get; set; }  
-        public byte UserCount { get; set; }
-        public byte MaxUserCount { get; set; }
+    // TODO: volatile в переменных, которые используются везде
 
-        public static RoomInfo FromBytes(byte[] data)
-        {
-            var r = new RoomInfo();
-            r.OwnersName = Encoding.ASCII.GetString(data, 4, BitConverter.ToInt32(data, 0));
-            r.MaxUserCount = data[r.OwnersName.Length + 4];
-            r.MaxUserCount = data[r.OwnersName.Length + 5];
-            return r;
-        }
-        public byte[] GetBytes()
-        {
-            if(OwnersName.Length > 20)
-            {
-                OwnersName = OwnersName.Substring(0, 20);
-            }  
-            return BitConverter
-                .GetBytes(OwnersName.Length)
-                .Concat(Encoding.ASCII.GetBytes(OwnersName))
-                .Concat(new byte[] { UserCount, MaxUserCount }).ToArray();
-        }
-    }
     class NetGameServer
     {
         static public readonly ushort RoomHostPort = 2557;
@@ -198,25 +171,25 @@ namespace Asteroid.src.network
                             broadcastingMeets.RemoveAll(t => (now - t.Item2).TotalMilliseconds > 1000);
                             foreach(var t in broadcastingMeets)
                             {
-                                if (t.Item1.Address.GetHashCode() == remoteEndPoint.Address.GetHashCode())
-                                {
-                                    Debug.WriteLine("already have it");
-                                    return;
-                                }
-                                
+                                if (t.Item1.Port == remoteEndPoint.Port 
+                                && t.Item1.Address.GetHashCode() == remoteEndPoint.Address.GetHashCode()) return;
                             }
                             broadcastingMeets.Add(new Tuple<IPEndPoint, DateTime>(remoteEndPoint, now));
+
                             //отправляю данные о комнате
-                            var roomInfo = (new RoomInfo()
+                            var broadcastAnswer = new OwnerPackage((new RoomInfo()
                             {
                                 OwnersName = scope.OwnerName,
                                 MaxUserCount = MaxUserCount,
                                 UserCount = scope.UserCount,
-                            }).GetBytes();
-                            Debug.WriteLine("Answering to broadcast from " + remoteEndPoint.ToString(), "server");
-                            scope.client.Send(roomInfo, roomInfo.Length, remoteEndPoint);
+                            }).GetBytes())
+                            { PackageType = OwnerPackageType.BroadcastScanningAnswer };
+
+                            Debug.WriteLine("Answering to broadcast scan from " + remoteEndPoint.ToString(), "server");
+                            scope.client.Send(broadcastAnswer.Data, broadcastAnswer.Data.Length, remoteEndPoint);
                             break;
                         case MemberPackageType.RoomEnterRequest:
+                            byte[] response;
                             //добавляю в комнату
                             if(scope.members.Count < MaxUserCount)
                             {
@@ -227,15 +200,23 @@ namespace Asteroid.src.network
 
                                 if(scope.members.Count >= MaxUserCount)
                                     scope.client.EnableBroadcast = false;
+                                //заполняю ответ
+                                response = (new OwnerPackage(null) { PackageType = OwnerPackageType.RoomEnterRequestAcception }).GetBytes();
                             }
+                            else
+                            {
+                                //отказ
+                                response = (new OwnerPackage(null) { PackageType = OwnerPackageType.RoomEnterRequestRejection }).GetBytes();
+                            }
+                            scope.client.Send(response, response.Length, remoteEndPoint);
                             break;
-                        case MemberPackageType.Acknowledgment:
+                        case MemberPackageType.ActionsAcknowledgment:
                             foreach (RoomMember member in scope.members)
                             {
                                 //обработка подтверждения
                                 if (member.EndPoint == remoteEndPoint)
                                 {
-                                    var acknowledgment = (Acknowledgment)memberPackageContent;
+                                    var acknowledgment = (ActionsAcknowledgment)memberPackageContent;
                                     member.AverageFrameTime = acknowledgment.AverageFrameExecutionTime;
                                     member.LastAcknowlegmentCheckpoint = acknowledgment.Checkpoint;
                                 }

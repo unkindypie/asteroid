@@ -25,6 +25,15 @@ namespace Asteroid.src.network
             }
         }
 
+        public static byte[] SerealizeAction(RemoteActionBase action)
+        {
+            using (MemoryStream ms = new MemoryStream(serBuf))
+            {
+                formatter.Serialize(ms, action);
+                return ms.GetBuffer().Take((int)ms.Position).ToArray();
+            }
+        }
+
         public static byte[] SerealizeAccumulatedActions(
             SynchronizedList<SynchronizedList<RemoteActionBase>> accumulatedActions)
         {

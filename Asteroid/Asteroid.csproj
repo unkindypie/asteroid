@@ -73,10 +73,10 @@
     <Compile Include="src\entities\INeedsUpdate.cs" />
     <Compile Include="src\input\ActionGeneratorsManager.cs" />
     <Compile Include="src\network\MemberPackage.cs" />
+    <Compile Include="src\network\OwnerPackage.cs" />
     <Compile Include="src\network\RemoteActionBase.cs" />
     <Compile Include="src\network\NetGameClient.cs" />
     <Compile Include="src\network\NetGameServer.cs" />
-    <Compile Include="src\network\NetService.cs" />
     <Compile Include="src\network\Parser.cs" />
     <Compile Include="src\network\SpawnBoxAction.cs" />
     <Compile Include="src\network\Synchronizer.cs" />
