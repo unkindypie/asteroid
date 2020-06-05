@@ -14,7 +14,7 @@ namespace Asteroid.src.network
         BroadcastScanning = 445454,
     }
     //типы сообщений от учасника комнаты к серверу
-    class RoomEnterRequest
+    class MPRoomEnterRequest
     {
         //ASCII
         public string Username { get; set; } = "";
@@ -25,11 +25,24 @@ namespace Asteroid.src.network
                 .Concat(Encoding.ASCII.GetBytes(Username)).ToArray();
         }
     }
-    class ActionsAcknowledgment
+    class MPActionsAcknowledgment
     {
         public ulong Checkpoint { get; set; }
         public ushort AverageFrameExecutionTime { get; set; }
-        
+        public byte[] GetBytes()
+        {
+            return BitConverter
+                .GetBytes(Checkpoint)
+                .Concat(BitConverter.GetBytes(AverageFrameExecutionTime)).ToArray();
+        }
+        public static MPActionsAcknowledgment Parse(byte[] data)
+        {
+            return new MPActionsAcknowledgment()
+            {
+                Checkpoint = BitConverter.ToUInt64(data, 0),
+                AverageFrameExecutionTime = BitConverter.ToUInt16(data, 8)
+            };
+        } 
     }
 
     //и еще есть IRemoteAction
@@ -54,11 +67,11 @@ namespace Asteroid.src.network
                     return null;
                 case MemberPackageType.RoomEnterRequest:
                     int nameLen = BitConverter.ToInt32(Data, 4);
-                    return new RoomEnterRequest() {
+                    return new MPRoomEnterRequest() {
                         Username = Encoding.Unicode.GetString(Data, 8, nameLen),
                     };
                 case MemberPackageType.ActionsAcknowledgment:
-                    return new ActionsAcknowledgment() {
+                    return new MPActionsAcknowledgment() {
                         Checkpoint = BitConverter.ToUInt64(Data, 4),
                         AverageFrameExecutionTime = BitConverter.ToUInt16(Data, 12)
                     };

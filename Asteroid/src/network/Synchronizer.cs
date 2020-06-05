@@ -69,12 +69,25 @@ namespace Asteroid.src.network
 
             if(curFrame % checkpointInterval == 0)
             {
+                if (world.NetClient.SynchronizerShouldStopFlag)
+                {
+                    world.NetClient.SynchronizerCanContinue.WaitOne();
+                    world.NetClient.SynchronizerShouldStopFlag = true;
+                }
                 curFrame = 0;
                 lastCheckpoint++;
+
+
+
                 //сливаю в executionStacks инпуты с буфера класса, работающего с 
                 // сетью и протоколом
                 executionStacks = inputManager.GeneratedActions;
                 inputManager.ClearActions();
+                world.NetClient.SynchronizationDoneSignal.Set();
+                //TODO: если будет тормозить, то от SyncrhonizationDone-ивента стоит избавиться
+                // пускай все будут начинать немного в разное время
+                //жду пока сервер скомандует, что можно начинать
+                world.NetClient.SynchronizerCanContinue.WaitOne();
             }
             //тут генерируется инпут
             inputManager.Update(elapsed, curFrame);

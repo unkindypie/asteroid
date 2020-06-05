@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Asteroid.src.utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,10 +13,10 @@ namespace Asteroid.src.network
         RoomEnterRequestRejection = 998777,
         BroadcastScanningAnswer = 45954,
         AccumulatedRemoteActions = 973642,
-        SynchrinizationDone = 787271,
+        SynchronizationDone = 787271,
     }
 
-    class RoomInfo
+    class OPRoomInfo
     {
         /// <summary>
         /// OwnersName - ASCII string
@@ -24,9 +25,9 @@ namespace Asteroid.src.network
         public byte UserCount { get; set; }
         public byte MaxUserCount { get; set; }
 
-        public static RoomInfo FromBytes(byte[] data)
+        public static OPRoomInfo FromBytes(byte[] data)
         {
-            var r = new RoomInfo();
+            var r = new OPRoomInfo();
             r.OwnersName = Encoding.ASCII.GetString(data, 4, BitConverter.ToInt32(data, 0));
             r.MaxUserCount = data[r.OwnersName.Length + 4];
             r.MaxUserCount = data[r.OwnersName.Length + 5];
@@ -45,9 +46,29 @@ namespace Asteroid.src.network
         }
     }
 
-    class SynchronizationDone
+    class OPSynchronizationDone
     {
-        ulong Checkpoint { get; set; }
+        public ulong Checkpoint { get; set; }
+    }
+
+    class OPAccumulatedActions
+    {
+        public ulong Checkpoint { get; set; }
+        public SynchronizedList<SynchronizedList<RemoteActionBase>> Actions { get; set; } = null;
+        public byte[] GetBytes()
+        {
+            return BitConverter.GetBytes(Checkpoint)
+                .Concat(Parser.SerealizeAccumulatedActions(Actions))
+                .ToArray();
+        }
+        public static OPAccumulatedActions Parse(byte[] data)
+        {
+            return new OPAccumulatedActions()
+            {
+                Checkpoint = BitConverter.ToUInt64(data, 0),
+                Actions = Parser.DeserealizeAccumulatedActions(data.Skip(4).ToArray())
+            };
+        }
     }
 
     class OwnerPackage
@@ -72,7 +93,7 @@ namespace Asteroid.src.network
                 case OwnerPackageType.RoomEnterRequestRejection:
                     return this;
                 case OwnerPackageType.BroadcastScanningAnswer:
-                    return RoomInfo.FromBytes(Data.Skip(4).ToArray());
+                    return OPRoomInfo.FromBytes(Data.Skip(4).ToArray());
                 default:
                     return null;
             }
@@ -89,6 +110,7 @@ namespace Asteroid.src.network
                 case OwnerPackageType.RoomEnterRequestRejection:
                     return result;
                 case OwnerPackageType.BroadcastScanningAnswer:
+                case OwnerPackageType.AccumulatedRemoteActions:
                     return result.Concat(Data).ToArray();
                 default:
                     return null;

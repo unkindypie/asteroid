@@ -40,7 +40,7 @@ namespace Asteroid.src.network
             public SynchronizedList<SynchronizedList<RemoteActionBase>> accumulatedActions;
             public SynchronizedList<RoomMember> members;
             public UdpClient client;
-            public bool IsInSynchronizationState = false;
+            public volatile bool IsInSynchronizationState = false;
             public string OwnerName => ownerName;
             public byte CheckpointInterval
             {
@@ -113,19 +113,32 @@ namespace Asteroid.src.network
                 int averageTime = 0;
                 scope.IsInSynchronizationState = true;
 
-                byte[] sActions = Parser.SerealizeAccumulatedActions(scope.accumulatedActions);
+                byte[] packagedActions = new OwnerPackage(
+                        (new OPAccumulatedActions()
+                        {
+                            Checkpoint = scope.CurrentCheckpoint,
+                            Actions = scope.accumulatedActions,
+                        }
+                        ).GetBytes()
+                    )
+                {
+                    PackageType = OwnerPackageType.AccumulatedRemoteActions
+                }.GetBytes();
 
                 foreach (RoomMember member in scope.members)
                 {
                     averageTime += member.AverageFrameTime;
 
                     // отправка собранных действий
-                    scope.client.Send(sActions, sActions.Length);
+                    scope.client.Send(packagedActions, packagedActions.Length);
                 }
 
                 foreach (var frame in scope.accumulatedActions) frame.Clear();
 
                 if(scope.members.Count != 0) averageTime /= scope.members.Count;
+
+                //TODO: тут стопить до момента, пока не придут подтверждения
+                //(и waitingTime не считать, удачи там)
 
                 scope.CurrentCheckpoint++;
                 scope.IsInSynchronizationState = false;
@@ -137,7 +150,7 @@ namespace Asteroid.src.network
                     // минус время выполнения тика SenderFunction
                     (int)((DateTime.Now - sendingStarted).TotalMilliseconds);
 
-                Debug.WriteLine($"Sender update: {waitingTime} ms, {sActions.Length} b", "server");
+                Debug.WriteLine($"Sender update: {waitingTime} ms, {packagedActions.Length} b", "server");
 
                 Thread.Sleep(
                     waitingTime  < 0 ? 0 : (waitingTime > 80 ? 80 : waitingTime)
@@ -156,7 +169,7 @@ namespace Asteroid.src.network
             {
                 IPEndPoint remoteEndPoint = null;
                 byte[] received = scope.client.Receive(ref remoteEndPoint);
-                if (scope.IsInSynchronizationState) continue;
+                
                 //отправляю обработку в тредпул
                 Task.Run(() => {
                     if (scope.IsInSynchronizationState) return;
@@ -177,7 +190,7 @@ namespace Asteroid.src.network
                             broadcastingMeets.Add(new Tuple<IPEndPoint, DateTime>(remoteEndPoint, now));
 
                             //отправляю данные о комнате
-                            var broadcastAnswer = new OwnerPackage((new RoomInfo()
+                            var broadcastAnswer = new OwnerPackage((new OPRoomInfo()
                             {
                                 OwnersName = scope.OwnerName,
                                 MaxUserCount = MaxUserCount,
@@ -213,16 +226,19 @@ namespace Asteroid.src.network
                         case MemberPackageType.ActionsAcknowledgment:
                             foreach (RoomMember member in scope.members)
                             {
+                                //TODO: разсылай SynhronizationDone когда все подтвердили 
+
                                 //обработка подтверждения
                                 if (member.EndPoint == remoteEndPoint)
                                 {
-                                    var acknowledgment = (ActionsAcknowledgment)memberPackageContent;
+                                    var acknowledgment = (MPActionsAcknowledgment)memberPackageContent;
                                     member.AverageFrameTime = acknowledgment.AverageFrameExecutionTime;
                                     member.LastAcknowlegmentCheckpoint = acknowledgment.Checkpoint;
                                 }
                             }
                             break;
                         case MemberPackageType.RemoteAction:
+                            if (scope.IsInSynchronizationState) return;
                             //TODO: контролить ситуацию, когда юзер спамит RemoteAction'ами
                             var action = (RemoteActionBase)memberPackageContent;
                             if (action.Checkpoint >= scope.CurrentCheckpoint)

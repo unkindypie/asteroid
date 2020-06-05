@@ -30,7 +30,8 @@ namespace Asteroid.src.network
             public AutoResetEvent synchronizerCanWorkSignal = new AutoResetEvent(false);
             public volatile bool synchronizerShouldStopFlag = true;
             // можно ли слать Acknowlegment 
-            public AutoResetEvent synchronizerWorkDoneSignla = new AutoResetEvent(false);
+            public AutoResetEvent synchronizersWorkDoneSignal = new AutoResetEvent(false);
+            public ulong lastRecievedActionsCheckpoint = 0;
         }
 
         public NetGameClient()
@@ -40,7 +41,9 @@ namespace Asteroid.src.network
             };
         }
 
-        public AutoResetEvent CanContinueUpdatingPhysicsSignal => scope.synchronizerCanWorkSignal;
+        public AutoResetEvent SynchronizerCanContinue => scope.synchronizerCanWorkSignal;
+        public AutoResetEvent SynchronizationDoneSignal => scope.synchronizersWorkDoneSignal;
+
         public bool SynchronizerShouldStopFlag
         {
             get {
@@ -56,9 +59,9 @@ namespace Asteroid.src.network
         /// Синхронно шлет широковещательную дейтаграмму на порт сервера и ждет ответа
         /// </summary>
         /// <returns></returns>
-        public Dictionary<IPEndPoint, RoomInfo> ScanNetwork()
+        public Dictionary<IPEndPoint, OPRoomInfo> ScanNetwork()
         {
-            Dictionary<IPEndPoint, RoomInfo> rooms = new Dictionary<IPEndPoint, RoomInfo>();
+            Dictionary<IPEndPoint, OPRoomInfo> rooms = new Dictionary<IPEndPoint, OPRoomInfo>();
 
             scope.client.EnableBroadcast = true;
             var broadcastEp = new IPEndPoint(IPAddress.Broadcast, NetGameServer.RoomHostPort);
@@ -78,7 +81,7 @@ namespace Asteroid.src.network
                     if (!rooms.ContainsKey(serverEp) 
                         && response.PackageType == OwnerPackageType.BroadcastScanningAnswer)
                     {
-                        rooms.Add(serverEp, (RoomInfo)roomInfo);
+                        rooms.Add(serverEp, (OPRoomInfo)roomInfo);
                     }
                 } catch(SocketException) //прошел таймаут
                 {
@@ -93,29 +96,36 @@ namespace Asteroid.src.network
         public bool TryConnect(IPEndPoint serverEP, string username)
         {
             if (scope.isListenerRunning) throw new Exception("Listener is running, can't receive RoomEnterRequestAcception");
-
+            //если через 300 мс не ответят, то сервер не сервер
             scope.client.Client.ReceiveTimeout = 300;
+            //запрашиваю вход
             var mp = new MemberPackage(
-                (new RoomEnterRequest() { Username = username }).GetBytes()
+                (new MPRoomEnterRequest() { Username = username }).GetBytes()
                 ).GetBytes();
             scope.client.Send(mp, mp.Length, serverEP);
             try
             {
+                //жду и парсю ответ
                 var ownerPackage = new OwnerPackage(scope.client.Receive(ref serverEP));
                 ownerPackage.Parse();
                 scope.client.Client.ReceiveTimeout = -1;
+                //вход удался
                 if (ownerPackage.PackageType == OwnerPackageType.RoomEnterRequestAcception)
                 {
                     scope.client.Connect(serverEP);
                     scope.isConnected = true;
                     scope.serverEndPoint = serverEP;
+                    //запускаю поток, читающий прослушиваемый сокет и обрабатывающий пакеты
+                    listenerThread = new Thread(ListenerThreadFunction);
+                    listenerThread.IsBackground = true;
+                    listenerThread.Start(scope);
                     return true;
                 }
                 else
                 {
                     return false;
                 }
-            } catch(SocketException)
+            } catch(SocketException) //если таймаут в 300 мс прошел, то сервер не сервер
             {
                 scope.client.Client.ReceiveTimeout = -1;
                 return false;
@@ -136,7 +146,6 @@ namespace Asteroid.src.network
                 await scope.client.SendAsync(memberPackage, memberPackage.Length);
             }
         }
-
         static void ListenerThreadFunction(object _scope)
         {
             SharedThreadScope scope = (SharedThreadScope)_scope;
@@ -150,16 +159,29 @@ namespace Asteroid.src.network
                     if (sender.Port != scope.serverEndPoint.Port
                    && sender.Address.GetHashCode() == sender.Address.GetHashCode())
                     {
-
                         OwnerPackage ownerPackage = new OwnerPackage(received);
                         var pData = ownerPackage.Parse();
                         switch (ownerPackage.PackageType)
                         {
                             case OwnerPackageType.AccumulatedRemoteActions:
+                                //сереализую действия
                                 scope.receivedActions = Parser.DeserealizeAccumulatedActions(ownerPackage.Data);
                                 Debug.WriteLine($"Deserealized {ownerPackage.Data.Length} of actions", "net-client");
+                                //разблокирываю основой поток
                                 scope.synchronizerShouldStopFlag = false;
                                 scope.synchronizerCanWorkSignal.Set();
+                                //жду пока основой поток сольет действия в свой буфер
+                                scope.synchronizersWorkDoneSignal.WaitOne();
+                                //отправляю подтверждение серверу
+                                byte[] package = new MemberPackage(new MPActionsAcknowledgment()
+                                {
+                                    Checkpoint = (pData as OPAccumulatedActions).Checkpoint
+                                }.GetBytes())
+                                {
+                                    PackageType = MemberPackageType.ActionsAcknowledgment
+                                }.GetBytes();
+                                scope.client.Send(package, package.Length);
+
                                 break;
                             default:
                                 break;
