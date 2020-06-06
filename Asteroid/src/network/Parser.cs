@@ -46,7 +46,7 @@ namespace Asteroid.src.network
                 //        formatter.Serialize(ms, action);
                 //    } 
                 //}
-                formatter.Serialize(ms, accumulatedActions.ToArray());
+                formatter.Serialize(ms, accumulatedActions);
                 //return serBuf.Take((int)ms.Position).ToArray();
                 return ms.GetBuffer().Take((int)ms.Position).ToArray();
             }

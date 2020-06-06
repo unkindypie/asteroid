@@ -31,6 +31,7 @@ namespace Asteroid.src.network
             public volatile bool synchronizerShouldStopFlag = true;
             // можно ли слать Acknowlegment 
             public AutoResetEvent synchronizersWorkDoneSignal = new AutoResetEvent(false);
+
             public ulong lastRecievedActionsCheckpoint = 0;
         }
 
@@ -101,7 +102,9 @@ namespace Asteroid.src.network
             //запрашиваю вход
             var mp = new MemberPackage(
                 (new MPRoomEnterRequest() { Username = username }).GetBytes()
-                ).GetBytes();
+                )
+            { PackageType = MemberPackageType.RoomEnterRequest }.GetBytes();
+
             scope.client.Send(mp, mp.Length, serverEP);
             try
             {
@@ -146,6 +149,7 @@ namespace Asteroid.src.network
                 await scope.client.SendAsync(memberPackage, memberPackage.Length);
             }
         }
+
         static void ListenerThreadFunction(object _scope)
         {
             SharedThreadScope scope = (SharedThreadScope)_scope;
@@ -156,8 +160,8 @@ namespace Asteroid.src.network
                 var received = scope.client.Receive(ref sender);
                 Task.Run(() =>
                 {
-                    if (sender.Port != scope.serverEndPoint.Port
-                   && sender.Address.GetHashCode() == sender.Address.GetHashCode())
+                   
+                    if (sender.GetHashCode() == scope.serverEndPoint.GetHashCode())
                     {
                         OwnerPackage ownerPackage = new OwnerPackage(received);
                         var pData = ownerPackage.Parse();
@@ -165,7 +169,7 @@ namespace Asteroid.src.network
                         {
                             case OwnerPackageType.AccumulatedRemoteActions:
                                 //сереализую действия
-                                scope.receivedActions = Parser.DeserealizeAccumulatedActions(ownerPackage.Data);
+                                scope.receivedActions = (pData as OPAccumulatedActions).Actions;
                                 Debug.WriteLine($"Deserealized {ownerPackage.Data.Length} of actions", "net-client");
                                 //разблокирываю основой поток
                                 scope.synchronizerShouldStopFlag = false;
@@ -175,13 +179,20 @@ namespace Asteroid.src.network
                                 //отправляю подтверждение серверу
                                 byte[] package = new MemberPackage(new MPActionsAcknowledgment()
                                 {
-                                    Checkpoint = (pData as OPAccumulatedActions).Checkpoint
+                                    Checkpoint = (pData as OPAccumulatedActions).Checkpoint,
+                                    AverageFrameExecutionTime = 0
                                 }.GetBytes())
                                 {
                                     PackageType = MemberPackageType.ActionsAcknowledgment
                                 }.GetBytes();
                                 scope.client.Send(package, package.Length);
-
+                                scope.lastRecievedActionsCheckpoint = (pData as OPAccumulatedActions).Checkpoint;
+                                break;
+                            case OwnerPackageType.SynchronizationDone:
+                                if((pData as OPSynchronizationDone).Checkpoint == scope.lastRecievedActionsCheckpoint)
+                                {
+                                    scope.synchronizerCanWorkSignal.Set();
+                                }
                                 break;
                             default:
                                 break;

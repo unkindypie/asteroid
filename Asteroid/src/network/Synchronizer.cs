@@ -48,18 +48,22 @@ namespace Asteroid.src.network
                 server = new NetGameServer(checkpointInterval);
                 server.Listen();
                 canUpdate = true;
-                server.StartSending();
             }
             Task.Run(() =>
             {
                 Thread.Sleep(100);
-                Debug.WriteLine("Started scanning...", "Synchronizer-client");
+                Debug.WriteLine("Started scanning...", "Synchronizer");
                 var rooms = world.NetClient.ScanNetwork();
                 foreach (var ipAndRoom in rooms)
                 {
                     Debug.WriteLine(ipAndRoom.Key.ToString() + " "
-                        + ipAndRoom.Value.OwnersName, "Synchronizer-client");
+                        + ipAndRoom.Value.OwnersName, "Synchronizer");
+                    if(world.NetClient.TryConnect(ipAndRoom.Key, "usual-player-name"))
+                    {
+                        Debug.WriteLine("Connected to " + ipAndRoom.Key, "Synchronizer");
+                    }
                 }
+                
             });
         }
 
@@ -74,11 +78,6 @@ namespace Asteroid.src.network
                     world.NetClient.SynchronizerCanContinue.WaitOne();
                     world.NetClient.SynchronizerShouldStopFlag = true;
                 }
-                curFrame = 0;
-                lastCheckpoint++;
-
-
-
                 //сливаю в executionStacks инпуты с буфера класса, работающего с 
                 // сетью и протоколом
                 executionStacks = inputManager.GeneratedActions;
@@ -88,6 +87,9 @@ namespace Asteroid.src.network
                 // пускай все будут начинать немного в разное время
                 //жду пока сервер скомандует, что можно начинать
                 world.NetClient.SynchronizerCanContinue.WaitOne();
+
+                curFrame = 0;
+                lastCheckpoint++;
             }
             //тут генерируется инпут
             inputManager.Update(elapsed, curFrame);

@@ -27,8 +27,8 @@ namespace Asteroid.src.network
     }
     class MPActionsAcknowledgment
     {
-        public ulong Checkpoint { get; set; }
-        public ushort AverageFrameExecutionTime { get; set; }
+        public ulong Checkpoint { get; set; } = 0;
+        public ushort AverageFrameExecutionTime { get; set; } = 0;
         public byte[] GetBytes()
         {
             return BitConverter
@@ -71,10 +71,7 @@ namespace Asteroid.src.network
                         Username = Encoding.Unicode.GetString(Data, 8, nameLen),
                     };
                 case MemberPackageType.ActionsAcknowledgment:
-                    return new MPActionsAcknowledgment() {
-                        Checkpoint = BitConverter.ToUInt64(Data, 4),
-                        AverageFrameExecutionTime = BitConverter.ToUInt16(Data, 12)
-                    };
+                    return MPActionsAcknowledgment.Parse(Data.Skip(4).ToArray());
                 case MemberPackageType.RemoteAction:
                     return Parser.ParseAction(Data.Skip(4).ToArray());
                 default:
@@ -88,6 +85,8 @@ namespace Asteroid.src.network
             switch (PackageType)
             {
                 case MemberPackageType.RoomEnterRequest:
+                case MemberPackageType.ActionsAcknowledgment:
+                case MemberPackageType.RemoteAction:
                     return result.Concat(Data).ToArray();
                 case MemberPackageType.BroadcastScanning:
                 default:

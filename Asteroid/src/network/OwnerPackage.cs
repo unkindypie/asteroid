@@ -49,6 +49,18 @@ namespace Asteroid.src.network
     class OPSynchronizationDone
     {
         public ulong Checkpoint { get; set; }
+        public byte[] GetBytes()
+        {
+            return BitConverter.GetBytes(Checkpoint)
+                .ToArray();
+        }
+        public static OPAccumulatedActions Parse(byte[] data)
+        {
+            return new OPAccumulatedActions()
+            {
+                Checkpoint = BitConverter.ToUInt64(data, 0),
+            };
+        }
     }
 
     class OPAccumulatedActions
@@ -66,11 +78,10 @@ namespace Asteroid.src.network
             return new OPAccumulatedActions()
             {
                 Checkpoint = BitConverter.ToUInt64(data, 0),
-                Actions = Parser.DeserealizeAccumulatedActions(data.Skip(4).ToArray())
+                Actions = Parser.DeserealizeAccumulatedActions(data.Skip(8).ToArray())
             };
         }
     }
-
     class OwnerPackage
     {
         public OwnerPackageType PackageType { get; set; }
@@ -87,11 +98,13 @@ namespace Asteroid.src.network
             switch (PackageType)
             {
                 case OwnerPackageType.AccumulatedRemoteActions:
-                    return this;
+                    return OPAccumulatedActions.Parse(Data.Skip(4).ToArray());
                 case OwnerPackageType.RoomEnterRequestAcception:
                     return this;
                 case OwnerPackageType.RoomEnterRequestRejection:
                     return this;
+                case OwnerPackageType.SynchronizationDone:
+                    return OPSynchronizationDone.Parse(Data.Skip(4).ToArray());
                 case OwnerPackageType.BroadcastScanningAnswer:
                     return OPRoomInfo.FromBytes(Data.Skip(4).ToArray());
                 default:
@@ -110,7 +123,10 @@ namespace Asteroid.src.network
                 case OwnerPackageType.RoomEnterRequestRejection:
                     return result;
                 case OwnerPackageType.BroadcastScanningAnswer:
+                    return result.Concat(Data).ToArray();
                 case OwnerPackageType.AccumulatedRemoteActions:
+                    return result.Concat(Data).ToArray();
+                case OwnerPackageType.SynchronizationDone:
                     return result.Concat(Data).ToArray();
                 default:
                     return null;
