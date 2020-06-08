@@ -23,11 +23,10 @@ namespace Asteroid.src.network
         ActionGeneratorsManager inputManager;
         byte checkpointInterval = 5;
         byte curFrame = 0;
-        ulong lastCheckpoint;
+        ulong checkpoint;
 
         object pendingToExecutionStacksCoppyingLock = 42; //объект синхронизации для критической секции
         List<RemoteActionBase>[] executionStacks;
-        bool canUpdate = false;
 
         NetGameServer server = null;
 
@@ -41,14 +40,31 @@ namespace Asteroid.src.network
                 executionStacks[i] = new List<RemoteActionBase>();
             }
 
-            inputManager = new ActionGeneratorsManager(checkpointInterval);
+            inputManager = new ActionGeneratorsManager(checkpointInterval, world);
             world.Initialize(inputManager);
-            if(sessionType == SynchronizerType.WorldOwner)
-            {
-                server = new NetGameServer(checkpointInterval);
-                server.Listen();
-                canUpdate = true;
-            }
+            //if(sessionType == SynchronizerType.WorldOwner)
+            //{
+            //    server = new NetGameServer(checkpointInterval);
+            //    server.Listen();
+            //    canUpdate = true;
+            //}
+            //Task.Run(() =>
+            //{
+            //    Thread.Sleep(100);
+            //    Debug.WriteLine("Started scanning...", "Synchronizer");
+            //    var rooms = world.NetClient.ScanNetwork();
+            //    foreach (var ipAndRoom in rooms)
+            //    {
+            //        Debug.WriteLine(ipAndRoom.Key.ToString() + " "
+            //            + ipAndRoom.Value.OwnersName, "Synchronizer");
+            //        if(world.NetClient.TryConnect(ipAndRoom.Key, "usual-player-name"))
+            //        {
+            //            Debug.WriteLine("Connected to " + ipAndRoom.Key, "Synchronizer");
+            //        }
+            //    }
+
+            //});
+
             Task.Run(() =>
             {
                 Thread.Sleep(100);
@@ -58,30 +74,55 @@ namespace Asteroid.src.network
                 {
                     Debug.WriteLine(ipAndRoom.Key.ToString() + " "
                         + ipAndRoom.Value.OwnersName, "Synchronizer");
-                    if(world.NetClient.TryConnect(ipAndRoom.Key, "usual-player-name"))
+                    if (world.NetClient.TryConnect(ipAndRoom.Key, "usual-player-name"))
                     {
                         Debug.WriteLine("Connected to " + ipAndRoom.Key, "Synchronizer");
                     }
+                    else Debug.WriteLine("Server says no", "Synchronizer");
+                    return;
                 }
-                
+                server = new NetGameServer(checkpointInterval);
+                server.Listen();;
+
+                Thread.Sleep(100);
+                Debug.WriteLine("Started scanning...", "Synchronizer");
+                rooms = world.NetClient.ScanNetwork();
+                foreach (var ipAndRoom in rooms)
+                {
+                    Debug.WriteLine(ipAndRoom.Key.ToString() + " "
+                        + ipAndRoom.Value.OwnersName, "Synchronizer");
+                    if (world.NetClient.TryConnect(ipAndRoom.Key, "usual-player-name"))
+                    {
+                        Debug.WriteLine("Connected to " + ipAndRoom.Key, "Synchronizer");
+                    }
+                    else Debug.WriteLine("Server says no", "Synchronizer");
+                }
             });
+
         }
 
         public void Update(GameTime elapsed)
         {
-            if (!canUpdate) return;
+            if (!world.NetClient.IsGameStarted) return;
 
-            if(curFrame % checkpointInterval == 0)
+            if(curFrame == checkpointInterval - 1)
             {
                 if (world.NetClient.SynchronizerShouldStopFlag)
                 {
+                    Task.Run(() => Debug.WriteLine("Client stopping on " + checkpoint));
                     world.NetClient.SynchronizerCanContinue.WaitOne();
                     world.NetClient.SynchronizerShouldStopFlag = true;
                 }
                 //сливаю в executionStacks инпуты с буфера класса, работающего с 
                 // сетью и протоколом
-                executionStacks = inputManager.GeneratedActions;
-                inputManager.ClearActions();
+                for(int i = 0; i < checkpointInterval; i++)
+                {
+                    //executionStacks[i].Clear();
+                    foreach(RemoteActionBase action in world.NetClient.ReceivedActions[i])
+                    {
+                        executionStacks[i].Add(action);
+                    }
+                }
                 world.NetClient.SynchronizationDoneSignal.Set();
                 //TODO: если будет тормозить, то от SyncrhonizationDone-ивента стоит избавиться
                 // пускай все будут начинать немного в разное время
@@ -89,14 +130,16 @@ namespace Asteroid.src.network
                 world.NetClient.SynchronizerCanContinue.WaitOne();
 
                 curFrame = 0;
-                lastCheckpoint++;
+                checkpoint++;
             }
             //тут генерируется инпут
-            inputManager.Update(elapsed, curFrame);
+            inputManager.Update(elapsed, curFrame, checkpoint);
             //применяю инпут, который должен быть применен в этом кадре
             foreach (RemoteActionBase actionData in executionStacks[curFrame])
             {
                 world.ExecuteAction(actionData);
+                Task.Run(() => Debug.WriteLine("Executing action on frame " + curFrame +
+                    " on CP " + checkpoint + ". ActionData: f: " + actionData.Frame + " cp: " + actionData.Checkpoint));
             }
             executionStacks[curFrame].Clear();
 

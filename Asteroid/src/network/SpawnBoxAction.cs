@@ -17,7 +17,7 @@ namespace Asteroid.src.network
         //        return RemoteActionType.SpawnBox;
         //    }
         //}
-        public Vec2 Position { get; set; }
+        public AVec2 Position { get; set; }
 
     }
 }

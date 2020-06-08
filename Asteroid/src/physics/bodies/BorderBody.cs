@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Box2DX.Collision;
 using Box2DX.Common;
 using Box2DX.Dynamics;
-using Box2DX.Collision;
 
 namespace Asteroid.src.physics.bodies
 {

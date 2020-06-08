@@ -30,7 +30,7 @@ namespace Asteroid.src.network
             using (MemoryStream ms = new MemoryStream(serBuf))
             {
                 formatter.Serialize(ms, action);
-                return ms.GetBuffer().Take((int)ms.Position).ToArray();
+                return serBuf.Take((int)ms.Position).ToArray();
             }
         }
 

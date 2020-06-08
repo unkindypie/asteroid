@@ -131,7 +131,7 @@ namespace Asteroid.src.network
                 { 
                     PackageType = OwnerPackageType.AccumulatedRemoteActions
                 }.GetBytes();
-                Debug.WriteLine($"Sending {packagedActions.Length}", "server-sender");
+                //Debug.WriteLine($"Sending {packagedActions.Length}", "server-sender");
                 foreach (RoomMember member in scope.members)
                 {
                     averageTime += member.AverageFrameTime;
@@ -147,13 +147,17 @@ namespace Asteroid.src.network
                 // жду, пока все подтверждения придут
                 if(scope.senderShouldStop)
                 {
+                    DateTime s = DateTime.Now;
+
                     scope.allAcknowlegesCameSignal.WaitOne();
+                    //Task.Run(() => Debug.WriteLine("Server slept for " + (DateTime.Now - s).TotalMilliseconds.ToString() + " on " + scope.CurrentCheckpoint));
+
                     scope.senderShouldStop = true;
                 }
                 var pSyncDone = (new OwnerPackage(
                     new OPSynchronizationDone() { Checkpoint = scope.CurrentCheckpoint }.GetBytes()
                     )
-                { PackageType = OwnerPackageType.SynchronizationDone}).GetBytes();
+                { PackageType = OwnerPackageType.SynchronizationDone }).GetBytes();
                 // разсылаю разрешение на выполнение учасникам комнаты
                 foreach (RoomMember member in scope.members)
                 {
@@ -166,12 +170,13 @@ namespace Asteroid.src.network
                 int waitingTime =  // 1000/60
                     (scope.SleepTime +
                     // плюс среднее время выполнения кадра у пользователей
-                    averageTime) * scope.CheckpointInterval; // -
-                    // минус время выполнения тика SenderFunction
-                    //(int)((DateTime.Now - sendingStarted).TotalMilliseconds);
+                    averageTime) * scope.CheckpointInterval -
+                        // минус время выполнения тика SenderFunction
+                        (int)((DateTime.Now - sendingStarted).TotalMilliseconds);
 
-                Debug.WriteLine($"Sender update: {waitingTime} ms, {packagedActions.Length} b", "server");
-
+                //waitingTime = 70;
+                //Debug.WriteLine($"Sender update: {waitingTime} ms, {packagedActions.Length} b", "server");
+                //Debug.WriteLine($"Server checkpoint: {scope.CurrentCheckpoint}");
                 Thread.Sleep(
                     waitingTime  < 0 ? 0 : (waitingTime > 80 ? 80 : waitingTime)
                    );
@@ -242,6 +247,14 @@ namespace Asteroid.src.network
                             scope.client.Send(response, response.Length, remoteEndPoint);
                             if (scope.members.Count >= MaxUserCount)
                             {
+                                byte[] startAllowedPkg = new OwnerPackage(null)
+                                {
+                                    PackageType = OwnerPackageType.StartAllowed
+                                }.GetBytes();
+                                foreach(var member in scope.members)
+                                {
+                                    scope.client.Send(startAllowedPkg, startAllowedPkg.Length, member.EndPoint);
+                                }
                                 scope.client.EnableBroadcast = false;
                                 scope.StartSending();
                             }
@@ -276,6 +289,7 @@ namespace Asteroid.src.network
                             {
                                 scope.accumulatedActions[action.Frame].Add(action);
                             }
+                            Debug.WriteLine($"Got action from {action.Checkpoint} being on {scope.CurrentCheckpoint}", "server");
                             break;
                     }
                 });  

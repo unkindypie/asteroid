@@ -31,6 +31,7 @@ namespace Asteroid.src.network
             public volatile bool synchronizerShouldStopFlag = true;
             // можно ли слать Acknowlegment 
             public AutoResetEvent synchronizersWorkDoneSignal = new AutoResetEvent(false);
+            public volatile bool isGameStarted = false;
 
             public ulong lastRecievedActionsCheckpoint = 0;
         }
@@ -44,6 +45,10 @@ namespace Asteroid.src.network
 
         public AutoResetEvent SynchronizerCanContinue => scope.synchronizerCanWorkSignal;
         public AutoResetEvent SynchronizationDoneSignal => scope.synchronizersWorkDoneSignal;
+
+        public SynchronizedList<SynchronizedList<RemoteActionBase>> ReceivedActions => scope.receivedActions;
+
+        public bool IsGameStarted => scope.isGameStarted;
 
         public bool SynchronizerShouldStopFlag
         {
@@ -170,7 +175,7 @@ namespace Asteroid.src.network
                             case OwnerPackageType.AccumulatedRemoteActions:
                                 //сереализую действия
                                 scope.receivedActions = (pData as OPAccumulatedActions).Actions;
-                                Debug.WriteLine($"Deserealized {ownerPackage.Data.Length} of actions", "net-client");
+                                //Debug.WriteLine($"Deserealized {ownerPackage.Data.Length} of actions", "net-client");
                                 //разблокирываю основой поток
                                 scope.synchronizerShouldStopFlag = false;
                                 scope.synchronizerCanWorkSignal.Set();
@@ -193,6 +198,9 @@ namespace Asteroid.src.network
                                 {
                                     scope.synchronizerCanWorkSignal.Set();
                                 }
+                                break;
+                            case OwnerPackageType.StartAllowed:
+                                scope.isGameStarted = true;
                                 break;
                             default:
                                 break;

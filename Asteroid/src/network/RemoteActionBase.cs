@@ -6,10 +6,18 @@ using System.Threading.Tasks;
 
 namespace Asteroid.src.network
 {
-    //enum RemoteActionType
-    //{
-    //    SpawnBox
-    //}
+    [Serializable]
+    struct AVec2
+    {
+        public float X { get; set; }
+        public float Y { get; set; }
+        public AVec2(float x, float y)
+        {
+            X = x;
+            Y = y;
+        }
+    }
+
     [Serializable]
     abstract class RemoteActionBase
     {

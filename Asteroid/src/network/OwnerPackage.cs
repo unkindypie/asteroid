@@ -14,6 +14,7 @@ namespace Asteroid.src.network
         BroadcastScanningAnswer = 45954,
         AccumulatedRemoteActions = 973642,
         SynchronizationDone = 787271,
+        StartAllowed = 2445499,
     }
 
     class OPRoomInfo
@@ -54,9 +55,9 @@ namespace Asteroid.src.network
             return BitConverter.GetBytes(Checkpoint)
                 .ToArray();
         }
-        public static OPAccumulatedActions Parse(byte[] data)
+        public static OPSynchronizationDone Parse(byte[] data)
         {
-            return new OPAccumulatedActions()
+            return new OPSynchronizationDone()
             {
                 Checkpoint = BitConverter.ToUInt64(data, 0),
             };
@@ -82,6 +83,7 @@ namespace Asteroid.src.network
             };
         }
     }
+
     class OwnerPackage
     {
         public OwnerPackageType PackageType { get; set; }
@@ -129,7 +131,7 @@ namespace Asteroid.src.network
                 case OwnerPackageType.SynchronizationDone:
                     return result.Concat(Data).ToArray();
                 default:
-                    return null;
+                    return result;
             }
         }
     }

@@ -74,7 +74,7 @@ namespace Asteroid.src.worlds
                 return new SpawnBoxAction()
                 {
                     Position
-                    = new Vec2(
+                    = new AVec2(
                         Translator.realXtoBox2DWorld(screenMP.X),
                         Translator.realYtoBox2DWorld(screenMP.Y)
                         )
@@ -88,7 +88,7 @@ namespace Asteroid.src.worlds
                 var action = (SpawnBoxAction)_action;
                 AddEntity(
                    new Box(
-                       action.Position,
+                       new Vec2(action.Position.X, action.Position.Y),
                        Translator.virtualXtoBox2DWorld(50),
                        Translator.virtualXtoBox2DWorld(50)
                 ));

@@ -7,6 +7,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 using Asteroid.src.network;
+using Asteroid.src.worlds;
+using System.Diagnostics;
 
 namespace Asteroid.src.input
 {
@@ -20,10 +22,13 @@ namespace Asteroid.src.input
         TimeSpan lastClickUpd = new TimeSpan(0);
         List<RemoteActionBase>[] ownActions;
         byte checkpointInterval;
+        BaseWorld world;
 
-        public ActionGeneratorsManager(byte checkpointInterval)
+        public ActionGeneratorsManager(byte checkpointInterval, BaseWorld world)
         {
             this.checkpointInterval = checkpointInterval;
+            this.world = world;
+
             ClearActions();
         }
 
@@ -48,7 +53,7 @@ namespace Asteroid.src.input
             mouseClickEventListeners.Add(listener);
         }
 
-        public void Update(GameTime gameTime, byte frame)
+        public void Update(GameTime gameTime, byte frame, ulong checkpoint)
         {
             if ((Mouse.GetState().LeftButton == ButtonState.Pressed ||
                 Mouse.GetState().RightButton == ButtonState.Pressed) &&
@@ -58,7 +63,13 @@ namespace Asteroid.src.input
                 {
                     var result = listener(Mouse.GetState());
                     result.Frame = frame;
-                    if (result != null) ownActions[frame].Add(result);
+                    result.Checkpoint = checkpoint;
+                    if (result != null) {
+                        
+                        //ownActions[frame].Add(result);
+                        world.NetClient.SendAction(result);
+                        Task.Run(() => Debug.WriteLine($"Sent action being on {checkpoint}", "client-input"));
+                    }
                 }
 
                 lastClickUpd = gameTime.TotalGameTime;
