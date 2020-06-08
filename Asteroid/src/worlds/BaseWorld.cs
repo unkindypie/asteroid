@@ -34,7 +34,7 @@ namespace Asteroid.src.worlds
         protected Dictionary<Type, Action<RemoteActionBase>> executors
             = new Dictionary<Type, Action<RemoteActionBase>>();
         //сетевой клиент для отправки RemoteAction'сов на сервер и сканирования доступных серверов
-        protected NetGameClient netClient = new NetGameClient();
+        protected NetGameClient netClient;
 
         public NetGameClient NetClient => netClient;
 

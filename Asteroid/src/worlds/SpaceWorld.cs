@@ -21,6 +21,8 @@ namespace Asteroid.src.worlds
 
         public SpaceWorld(Vector2 virtualSize, Vector2 realSize)
         {
+            
+            netClient = new NetGameClient((new Random()).Next(100, 999).ToString());
             this.virtualSize = virtualSize;
             this.realSize = realSize;
            

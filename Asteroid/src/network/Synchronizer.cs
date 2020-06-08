@@ -68,34 +68,39 @@ namespace Asteroid.src.network
             Task.Run(() =>
             {
                 Thread.Sleep(100);
-                Debug.WriteLine("Started scanning...", "Synchronizer");
+                Console.WriteLine("Started scanning...", "Synchronizer");
                 var rooms = world.NetClient.ScanNetwork();
                 foreach (var ipAndRoom in rooms)
                 {
-                    Debug.WriteLine(ipAndRoom.Key.ToString() + " "
-                        + ipAndRoom.Value.OwnersName, "Synchronizer");
-                    if (world.NetClient.TryConnect(ipAndRoom.Key, "usual-player-name"))
+                    //Debug.WriteLine(ipAndRoom.Key.ToString() + " "
+                    //    + ipAndRoom.Value.OwnersName, "Synchronizer");
+
+                    Console.WriteLine(ipAndRoom.Key.ToString() + " "
+                        + ipAndRoom.Value.OwnersName);
+
+                    if (world.NetClient.TryConnect(ipAndRoom.Key))
                     {
-                        Debug.WriteLine("Connected to " + ipAndRoom.Key, "Synchronizer");
+                        Console.WriteLine("Connected to " + ipAndRoom.Key, "Synchronizer");
                     }
-                    else Debug.WriteLine("Server says no", "Synchronizer");
+                    else Console.WriteLine("Server says no", "Synchronizer");
                     return;
                 }
+                Console.WriteLine("Running own server", "Synchronizer");
                 server = new NetGameServer(checkpointInterval);
                 server.Listen();;
 
                 Thread.Sleep(100);
-                Debug.WriteLine("Started scanning...", "Synchronizer");
+                Console.WriteLine("Started scanning...", "Synchronizer");
                 rooms = world.NetClient.ScanNetwork();
                 foreach (var ipAndRoom in rooms)
                 {
-                    Debug.WriteLine(ipAndRoom.Key.ToString() + " "
+                    Console.WriteLine(ipAndRoom.Key.ToString() + " "
                         + ipAndRoom.Value.OwnersName, "Synchronizer");
-                    if (world.NetClient.TryConnect(ipAndRoom.Key, "usual-player-name"))
+                    if (world.NetClient.TryConnect(ipAndRoom.Key))
                     {
-                        Debug.WriteLine("Connected to " + ipAndRoom.Key, "Synchronizer");
+                        Console.WriteLine("Connected to " + ipAndRoom.Key, "Synchronizer");
                     }
-                    else Debug.WriteLine("Server says no", "Synchronizer");
+                    else Console.WriteLine("Server says no", "Synchronizer");
                 }
             });
 
@@ -107,12 +112,7 @@ namespace Asteroid.src.network
 
             if(curFrame == checkpointInterval - 1)
             {
-                if (world.NetClient.SynchronizerShouldStopFlag)
-                {
-                    Task.Run(() => Debug.WriteLine("Client stopping on " + checkpoint));
-                    world.NetClient.SynchronizerCanContinue.WaitOne();
-                    world.NetClient.SynchronizerShouldStopFlag = true;
-                }
+                world.NetClient.Acknowlege(checkpoint);
                 //сливаю в executionStacks инпуты с буфера класса, работающего с 
                 // сетью и протоколом
                 for(int i = 0; i < checkpointInterval; i++)
@@ -123,11 +123,6 @@ namespace Asteroid.src.network
                         executionStacks[i].Add(action);
                     }
                 }
-                world.NetClient.SynchronizationDoneSignal.Set();
-                //TODO: если будет тормозить, то от SyncrhonizationDone-ивента стоит избавиться
-                // пускай все будут начинать немного в разное время
-                //жду пока сервер скомандует, что можно начинать
-                world.NetClient.SynchronizerCanContinue.WaitOne();
 
                 curFrame = 0;
                 checkpoint++;
@@ -138,8 +133,8 @@ namespace Asteroid.src.network
             foreach (RemoteActionBase actionData in executionStacks[curFrame])
             {
                 world.ExecuteAction(actionData);
-                Task.Run(() => Debug.WriteLine("Executing action on frame " + curFrame +
-                    " on CP " + checkpoint + ". ActionData: f: " + actionData.Frame + " cp: " + actionData.Checkpoint));
+                //Task.Run(() => Debug.WriteLine("Executing action on frame " + curFrame +
+                //    " on CP " + checkpoint + ". ActionData: f: " + actionData.Frame + " cp: " + actionData.Checkpoint));
             }
             executionStacks[curFrame].Clear();
 

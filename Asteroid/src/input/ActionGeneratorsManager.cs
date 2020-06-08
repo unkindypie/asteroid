@@ -20,32 +20,11 @@ namespace Asteroid.src.input
     {
         List<MouseClickListener> mouseClickEventListeners = new List<MouseClickListener>();
         TimeSpan lastClickUpd = new TimeSpan(0);
-        List<RemoteActionBase>[] ownActions;
-        byte checkpointInterval;
         BaseWorld world;
 
         public ActionGeneratorsManager(byte checkpointInterval, BaseWorld world)
         {
-            this.checkpointInterval = checkpointInterval;
             this.world = world;
-
-            ClearActions();
-        }
-
-        public List<RemoteActionBase>[] GeneratedActions
-        {
-            get
-            {
-                return ownActions;
-            }
-        }
-
-        public void ClearActions() {
-            ownActions = new List<RemoteActionBase>[checkpointInterval];
-            for (byte i = 0; i < checkpointInterval; i++)
-            {
-                ownActions[i] = new List<RemoteActionBase>();
-            }
         }
 
         public void AddMouseClickListener(MouseClickListener listener)
@@ -66,9 +45,8 @@ namespace Asteroid.src.input
                     result.Checkpoint = checkpoint;
                     if (result != null) {
                         
-                        //ownActions[frame].Add(result);
                         world.NetClient.SendAction(result);
-                        Task.Run(() => Debug.WriteLine($"Sent action being on {checkpoint}", "client-input"));
+                        //Task.Run(() => Debug.WriteLine($"Sent action being on {checkpoint}", "client-input"));
                     }
                 }
 

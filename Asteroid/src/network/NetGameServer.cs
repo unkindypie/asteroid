@@ -19,9 +19,8 @@ namespace Asteroid.src.network
     class NetGameServer
     {
         static public readonly ushort RoomHostPort = 2557;
-        static public readonly byte MaxUserCount = 1;
+        static public readonly byte MaxUserCount = 2;
         byte checkpointInterval;
-        Thread senderThread;
         Thread recieverThread;
 
         //нужен чтобы расшаривать ресурсы между тредами
@@ -42,7 +41,6 @@ namespace Asteroid.src.network
             public UdpClient client;
             public volatile bool IsInSynchronizationState = false;
             public string OwnerName => ownerName;
-            public Action StartSending;
 
             //чисто внутренний сигнал, котого будет ждать sender чтоб продолжить работать
             public AutoResetEvent allAcknowlegesCameSignal = new AutoResetEvent(false);
@@ -56,13 +54,12 @@ namespace Asteroid.src.network
                 }
             }
 
-            public SharedThreadScope(byte checkpointInterval, int sleepTime, string ownerName, Action startSenderThread)
+            public SharedThreadScope(byte checkpointInterval, int sleepTime, string ownerName)
             {
                 this.checkpointInterval = checkpointInterval;
                 this.sleepTime = sleepTime;
                 maxSleepTime = (int)(maxSleepTime * 1.15);
                 this.ownerName = ownerName;
-                StartSending = startSenderThread;
 
                 accumulatedActions = new SynchronizedList<SynchronizedList<RemoteActionBase>>();
                 for (byte i = 0; i < checkpointInterval; i++)
@@ -86,19 +83,12 @@ namespace Asteroid.src.network
             this.checkpointInterval = checkpointInterval;
 
             //общая область вызова для потоков
-            scope = new SharedThreadScope(checkpointInterval, (int)(SyncSimulation.Delta * 1000), ownerName, this.StartSending)
+            scope = new SharedThreadScope(checkpointInterval, (int)(SyncSimulation.Delta * 1000), ownerName)
             {
                 CurrentCheckpoint = 0,
                 client = new UdpClient(RoomHostPort),
             };
             scope.client.EnableBroadcast = true;
-        }
-
-        public void StartSending()
-        {
-            senderThread = new Thread(SenderFunction);
-            senderThread.IsBackground = true;
-            senderThread.Start(scope);
         }
 
         public void Listen()
@@ -108,80 +98,7 @@ namespace Asteroid.src.network
             recieverThread.Start(scope);
         }
 
-        static void SenderFunction(object arg)
-        {
-            SharedThreadScope scope = (SharedThreadScope)arg;
-            DateTime sendingStarted;
-
-            //TODO: избавиться от averageTime, если на клиенте все всегда работает быстро за 0 мс
-            while (true)
-            {
-                sendingStarted = DateTime.Now;
-                // высчитывание времени сна(зависит от среднего времени кадра) и отправка 
-                int averageTime = 0;
-                scope.IsInSynchronizationState = true;
-
-                byte[] packagedActions = new OwnerPackage(
-                    (new OPAccumulatedActions()
-                    {
-                        Checkpoint = scope.CurrentCheckpoint,
-                        Actions = scope.accumulatedActions,
-                    }
-                    ).GetBytes())
-                { 
-                    PackageType = OwnerPackageType.AccumulatedRemoteActions
-                }.GetBytes();
-                //Debug.WriteLine($"Sending {packagedActions.Length}", "server-sender");
-                foreach (RoomMember member in scope.members)
-                {
-                    averageTime += member.AverageFrameTime;
-
-                    // отправка собранных действий
-                    scope.client.Send(packagedActions, packagedActions.Length, member.EndPoint);
-                }
-
-                foreach (var frame in scope.accumulatedActions) frame.Clear();
-
-                if(scope.members.Count != 0) averageTime /= scope.members.Count;
-                  
-                // жду, пока все подтверждения придут
-                if(scope.senderShouldStop)
-                {
-                    DateTime s = DateTime.Now;
-
-                    scope.allAcknowlegesCameSignal.WaitOne();
-                    //Task.Run(() => Debug.WriteLine("Server slept for " + (DateTime.Now - s).TotalMilliseconds.ToString() + " on " + scope.CurrentCheckpoint));
-
-                    scope.senderShouldStop = true;
-                }
-                var pSyncDone = (new OwnerPackage(
-                    new OPSynchronizationDone() { Checkpoint = scope.CurrentCheckpoint }.GetBytes()
-                    )
-                { PackageType = OwnerPackageType.SynchronizationDone }).GetBytes();
-                // разсылаю разрешение на выполнение учасникам комнаты
-                foreach (RoomMember member in scope.members)
-                {
-                    scope.client.Send(pSyncDone, pSyncDone.Length, member.EndPoint);
-                }
-
-                scope.CurrentCheckpoint++;
-                scope.IsInSynchronizationState = false;
-
-                int waitingTime =  // 1000/60
-                    (scope.SleepTime +
-                    // плюс среднее время выполнения кадра у пользователей
-                    averageTime) * scope.CheckpointInterval -
-                        // минус время выполнения тика SenderFunction
-                        (int)((DateTime.Now - sendingStarted).TotalMilliseconds);
-
-                //waitingTime = 70;
-                //Debug.WriteLine($"Sender update: {waitingTime} ms, {packagedActions.Length} b", "server");
-                //Debug.WriteLine($"Server checkpoint: {scope.CurrentCheckpoint}");
-                Thread.Sleep(
-                    waitingTime  < 0 ? 0 : (waitingTime > 80 ? 80 : waitingTime)
-                   );
-            }
-        }
+        
 
         static void ReceiverFunction(object arg)
         {
@@ -193,7 +110,8 @@ namespace Asteroid.src.network
                 = new SynchronizedList<Tuple<IPEndPoint, DateTime>>();
             while (true)
             {
-                IPEndPoint remoteEndPoint = null;
+                //чтобы на линуксе не кидало argument null exception(моно - говно)
+                IPEndPoint remoteEndPoint = new IPEndPoint(0, 8000);
                 byte[] received = scope.client.Receive(ref remoteEndPoint);
                 
                 //отправляю обработку в тредпул
@@ -223,11 +141,13 @@ namespace Asteroid.src.network
                             }).GetBytes())
                             { PackageType = OwnerPackageType.BroadcastScanningAnswer }.GetBytes();
 
-                            Debug.WriteLine("Answering to broadcast scan from " + remoteEndPoint.ToString(), "server");
-                            scope.client.Send(broadcastAnswer, broadcastAnswer.Length, remoteEndPoint);
+                            
+                            int r = scope.client.Send(broadcastAnswer, broadcastAnswer.Length, remoteEndPoint);
+                            Debug.WriteLine($"Answering {r} bytes to broadcast scan from " + remoteEndPoint.ToString(), "server");
                             break;
                         case MemberPackageType.RoomEnterRequest:
                             byte[] response;
+                            Console.WriteLine("Answering to broadcast from " + remoteEndPoint);
                             //добавляю в комнату
                             if(scope.members.Count < MaxUserCount)
                             {
@@ -245,7 +165,7 @@ namespace Asteroid.src.network
                                 response = (new OwnerPackage(null) { PackageType = OwnerPackageType.RoomEnterRequestRejection }).GetBytes();
                             }
                             scope.client.Send(response, response.Length, remoteEndPoint);
-                            if (scope.members.Count >= MaxUserCount)
+                            if (scope.members.Count == MaxUserCount)
                             {
                                 byte[] startAllowedPkg = new OwnerPackage(null)
                                 {
@@ -256,7 +176,6 @@ namespace Asteroid.src.network
                                     scope.client.Send(startAllowedPkg, startAllowedPkg.Length, member.EndPoint);
                                 }
                                 scope.client.EnableBroadcast = false;
-                                scope.StartSending();
                             }
                             break;
                         case MemberPackageType.ActionsAcknowledgment:
@@ -267,7 +186,6 @@ namespace Asteroid.src.network
                                 if (member.EndPoint.GetHashCode() == remoteEndPoint.GetHashCode())
                                 {
                                     var acknowledgment = (MPActionsAcknowledgment)memberPackageContent;
-                                    member.AverageFrameTime = acknowledgment.AverageFrameExecutionTime;
                                     member.LastAcknowlegmentCheckpoint = (long)acknowledgment.Checkpoint;
                                 }
                                 if(member.LastAcknowlegmentCheckpoint == (long)scope.CurrentCheckpoint)
@@ -277,8 +195,27 @@ namespace Asteroid.src.network
                             }
                             if(receivedAcknowlgegmentCount == scope.members.Count)
                             {
-                                scope.senderShouldStop = false;
-                                scope.allAcknowlegesCameSignal.Set();
+                                scope.IsInSynchronizationState = true;
+
+                                byte[] packagedActions = new OwnerPackage(
+                                    (new OPAccumulatedActions()
+                                    {
+                                        Checkpoint = scope.CurrentCheckpoint,
+                                        Actions = scope.accumulatedActions,
+                                    }
+                                    ).GetBytes())
+                                {
+                                    PackageType = OwnerPackageType.AccumulatedRemoteActions
+                                }.GetBytes();
+                                foreach (RoomMember member in scope.members)
+                                {
+                                    // отправка собранных действий
+                                    scope.client.Send(packagedActions, packagedActions.Length, member.EndPoint);
+                                }
+                                foreach (var frame in scope.accumulatedActions) frame.Clear();
+                                scope.CurrentCheckpoint++;
+                                scope.IsInSynchronizationState = false;
+                                Debug.WriteLine($"Sent actions chunk for {scope.CurrentCheckpoint - 1}", "server");
                             }
                             break;
                         case MemberPackageType.RemoteAction:
