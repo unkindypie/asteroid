@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using Box2DX.Common;
 using Microsoft.Xna.Framework;
 
-using Asteroid.Core.render;
+using Asteroid.Core.Render;
 
-namespace Asteroid.Core.utils
+namespace Asteroid.Core.Utils
 {
     static class Translator
     {

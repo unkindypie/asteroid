@@ -8,9 +8,9 @@ using Box2DX.Common;
 using Box2DX.Dynamics;
 using Box2DX.Collision;
 
-using Asteroid.Core.physics.bodies;
+using Asteroid.Core.Physics.Bodies;
 
-namespace Asteroid.Core.physics
+namespace Asteroid.Core.Physics
 {
     static class SyncSimulation
     {

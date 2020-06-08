@@ -5,8 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 
-using Asteroid.Core.physics.bodies;
-using Asteroid.Core.render;
+using Asteroid.Core.Physics.Bodies;
+using Asteroid.Core.Render;
 
 
 namespace Asteroid.Core.entities

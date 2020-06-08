@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asteroid.Core.network
+namespace Asteroid.Core.Network
 {
     [Serializable]
     struct AVec2

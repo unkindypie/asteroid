@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Box2DX.Common;
 
-using Asteroid.Core.physics.bodies;
+using Asteroid.Core.Physics.Bodies;
 
 
 namespace Asteroid.Core.entities

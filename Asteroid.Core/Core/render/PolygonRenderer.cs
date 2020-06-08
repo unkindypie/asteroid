@@ -13,12 +13,12 @@ using Box2DX.Collision;
 
 using Color = Microsoft.Xna.Framework.Color;
 
-using Asteroid.Core.utils;
-using Asteroid.Core.physics.bodies;
+using Asteroid.Core.Utils;
+using Asteroid.Core.Physics.Bodies;
 
 
 
-namespace Asteroid.Core.render
+namespace Asteroid.Core.Render
 {
     class PolygonRenderer : IRenderer
     {

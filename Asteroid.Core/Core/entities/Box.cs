@@ -7,8 +7,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Box2DX.Common;
 
-using Asteroid.Core.render;
-using Asteroid.Core.physics.bodies;
+using Asteroid.Core.Render;
+using Asteroid.Core.Physics.Bodies;
 
 
 namespace Asteroid.Core.entities

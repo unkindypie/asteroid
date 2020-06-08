@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-using Asteroid.Core.network;
-using Asteroid.Core.worlds;
+using Asteroid.Core.Network;
+using Asteroid.Core.Worlds;
 using System.Diagnostics;
 
-namespace Asteroid.Core.input
+namespace Asteroid.Core.Input
 {
     //каждый обработчик возвращает данные действия
     delegate RemoteActionBase MouseClickListener(MouseState mouseState);

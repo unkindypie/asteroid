@@ -8,7 +8,7 @@ using Box2DX.Common;
 using Box2DX.Collision;
 
 
-namespace Asteroid.Core.physics.bodies
+namespace Asteroid.Core.Physics.Bodies
 {
     class BoxBody : IBody
     {

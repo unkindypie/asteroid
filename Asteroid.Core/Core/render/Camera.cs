@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Asteroid.Core.render
+namespace Asteroid.Core.Render
 {
     static class Camera
     {

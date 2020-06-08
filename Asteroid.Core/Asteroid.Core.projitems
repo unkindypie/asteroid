@@ -35,7 +35,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Core\utils\Translator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core\worlds\BaseWorld.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core\worlds\SpaceWorld.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Game1.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Content\" />

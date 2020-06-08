@@ -6,10 +6,10 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
-using Asteroid.Core.utils;
-using Asteroid.Core.worlds;
+using Asteroid.Core.Utils;
+using Asteroid.Core.Worlds;
 
-namespace Asteroid.Core.network
+namespace Asteroid.Core.Network
 {
     delegate RemoteActionBase ParserDelegete(byte[] data);
     static class Parser

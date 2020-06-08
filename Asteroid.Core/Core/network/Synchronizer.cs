@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
-using Asteroid.Core.worlds;
-using Asteroid.Core.physics;
-using Asteroid.Core.input;
+using Asteroid.Core.Worlds;
+using Asteroid.Core.Physics;
+using Asteroid.Core.Input;
 using System.Threading;
 using System.Diagnostics;
 
-namespace Asteroid.Core.network
+namespace Asteroid.Core.Network
 {
     enum SynchronizerType
     {

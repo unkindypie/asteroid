@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asteroid.Core.utils
+namespace Asteroid.Core.Utils
 {
     //скопипасчено с исходников .Net ПОТОМУ ЧТО КАКОГО-ТО %$# ЭТОТ КЛАСС ПРИВАТНЫЙ 
     [Serializable()]

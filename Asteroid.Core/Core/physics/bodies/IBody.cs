@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Box2DX.Dynamics;
 
-namespace Asteroid.Core.physics.bodies
+namespace Asteroid.Core.Physics.Bodies
 {
     interface IBody
     {

@@ -8,9 +8,9 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Diagnostics;
 
-using Asteroid.Core.utils;
+using Asteroid.Core.Utils;
 
-namespace Asteroid.Core.network
+namespace Asteroid.Core.Network
 {
 
     class NetGameClient

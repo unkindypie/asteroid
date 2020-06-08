@@ -7,12 +7,12 @@ using System.Diagnostics;
 using System;
 using System.Threading;
 
-using Asteroid.Core.utils;
-using Asteroid.Core.physics;
+using Asteroid.Core.Utils;
+using Asteroid.Core.Physics;
 using Asteroid.Core.entities;
-using Asteroid.Core.worlds;
-using Asteroid.Core.render;
-using Asteroid.Core.network;
+using Asteroid.Core.Worlds;
+using Asteroid.Core.Render;
+using Asteroid.Core.Network;
 
 namespace Asteroid
 {

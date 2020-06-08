@@ -1,11 +1,11 @@
-﻿using Asteroid.Core.utils;
+﻿using Asteroid.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asteroid.Core.network
+namespace Asteroid.Core.Network
 {
     enum OwnerPackageType
     {

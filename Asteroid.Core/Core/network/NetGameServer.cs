@@ -8,18 +8,18 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Collections.Concurrent;
 
-using Asteroid.Core.physics;
-using Asteroid.Core.utils;
+using Asteroid.Core.Physics;
+using Asteroid.Core.Utils;
 using System.Diagnostics;
 
-namespace Asteroid.Core.network
+namespace Asteroid.Core.Network
 {
     // TODO: volatile в переменных, которые используются везде
 
     class NetGameServer
     {
         static public readonly ushort RoomHostPort = 2557;
-        static public readonly byte MaxUserCount = 2;
+        static public readonly byte MaxUserCount = 1;
         byte checkpointInterval;
         Thread recieverThread;
 

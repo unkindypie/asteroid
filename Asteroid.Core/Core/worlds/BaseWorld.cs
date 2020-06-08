@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
 using Asteroid.Core.entities;
-using Asteroid.Core.physics;
-using Asteroid.Core.input;
-using Asteroid.Core.network;
+using Asteroid.Core.Physics;
+using Asteroid.Core.Input;
+using Asteroid.Core.Network;
 
 
-namespace Asteroid.Core.worlds
+namespace Asteroid.Core.Worlds
 {
 
     // Базовый класс для всех игровых миров(уровней.)

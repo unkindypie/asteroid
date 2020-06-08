@@ -7,12 +7,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Asteroid.Core.entities;
-using Asteroid.Core.utils;
-using Asteroid.Core.network;
+using Asteroid.Core.Utils;
+using Asteroid.Core.Network;
 using Box2DX.Common;
-using Asteroid.Core.input;
+using Asteroid.Core.Input;
 
-namespace Asteroid.Core.worlds
+namespace Asteroid.Core.Worlds
 {
     class SpaceWorld : BaseWorld
     {
@@ -70,7 +70,7 @@ namespace Asteroid.Core.worlds
         }
         void AddInputHandlers()
         {
-            inputManager.AddMouseClickListener(new input.MouseClickListener((MouseState state) =>
+            inputManager.AddMouseClickListener(new Input.MouseClickListener((MouseState state) =>
             {
                 var screenMP = Mouse.GetState().Position;
                 return new SpawnBoxAction()

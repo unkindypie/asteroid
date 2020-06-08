@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Asteroid.Core.render;
+using Asteroid.Core.Render;
 using Microsoft.Xna.Framework;
 
 namespace Asteroid.Core.entities
