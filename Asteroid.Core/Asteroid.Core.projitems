@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>ed3752fd-1fa7-433a-8459-2b0246d93a72</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Asteroid.Core</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Asteroid.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\entities\Box.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\entities\IEntity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\entities\INeedsUpdate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\entities\InvisibleBorder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\entities\IRenderable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\input\ActionGeneratorsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\network\MemberPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\network\NetGameClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\network\NetGameServer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\network\OwnerPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\network\Parser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\network\RemoteActionBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\network\SpawnBoxAction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\network\Synchronizer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\physics\bodies\BorderBody.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\physics\bodies\BoxBody.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\physics\bodies\IBody.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\physics\SyncSimulation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\render\Camera.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\render\IRenderer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\render\PolygonRenderer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\utils\SynchronizedList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\utils\Translator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\worlds\BaseWorld.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\worlds\SpaceWorld.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Game1.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Content\" />
+  </ItemGroup>
+  <ItemGroup>
+    <MonoGameContentReference Include="$(MSBuildThisFileDirectory)Content\Content.mgcb" />
+  </ItemGroup>
+</Project>
