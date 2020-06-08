@@ -10,31 +10,31 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Core\Asteroid.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\entities\Box.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\entities\IEntity.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\entities\INeedsUpdate.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\entities\InvisibleBorder.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\entities\IRenderable.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\input\ActionGeneratorsManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\network\MemberPackage.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\network\NetGameClient.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\network\NetGameServer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\network\OwnerPackage.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\network\Parser.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\network\RemoteActionBase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\network\SpawnBoxAction.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\network\Synchronizer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\physics\bodies\BorderBody.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\physics\bodies\BoxBody.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\physics\bodies\IBody.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\physics\SyncSimulation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\render\Camera.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\render\IRenderer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\render\PolygonRenderer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\utils\SynchronizedList.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\utils\Translator.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\worlds\BaseWorld.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Core\worlds\SpaceWorld.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Entities\Box.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Entities\IEntity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Entities\INeedsUpdate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Entities\InvisibleBorder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Entities\IRenderable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Input\ActionGeneratorsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Network\MemberPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Network\NetGameClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Network\NetGameServer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Network\OwnerPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Network\Parser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Network\RemoteActionBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Network\SpawnBoxAction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Network\Synchronizer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Physics\bodies\BorderBody.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Physics\bodies\BoxBody.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Physics\bodies\IBody.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Physics\SyncSimulation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Render\Camera.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Render\IRenderer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Render\PolygonRenderer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Utils\SynchronizedList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Utils\Translator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Worlds\BaseWorld.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Worlds\SpaceWorld.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Content\" />
