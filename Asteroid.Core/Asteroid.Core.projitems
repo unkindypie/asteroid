@@ -16,7 +16,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Core\Entities\InvisibleBorder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core\Entities\IRenderable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core\Input\ActionGeneratorsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Input\MovementController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core\Network\MemberPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Network\MovementAction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core\Network\NetGameClient.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core\Network\NetGameServer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core\Network\OwnerPackage.cs" />

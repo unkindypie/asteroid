@@ -9,7 +9,7 @@ using System.Threading;
 
 using Asteroid.Core.Utils;
 using Asteroid.Core.Physics;
-using Asteroid.Core.entities;
+using Asteroid.Core.Entities;
 using Asteroid.Core.Worlds;
 using Asteroid.Core.Render;
 using Asteroid.Core.Network;

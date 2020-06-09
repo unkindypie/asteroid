@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Asteroid.Core.entities;
+using Asteroid.Core.Entities;
 using Asteroid.Core.Utils;
 using Asteroid.Core.Network;
 using Box2DX.Common;
@@ -70,7 +70,7 @@ namespace Asteroid.Core.Worlds
         }
         void AddInputHandlers()
         {
-            inputManager.AddMouseClickListener(new Input.MouseClickListener((MouseState state) =>
+            inputManager.OnMousePress += new MouseClickListener((MouseState state) =>
             {
                 var screenMP = Mouse.GetState().Position;
                 return new SpawnBoxAction()
@@ -81,7 +81,7 @@ namespace Asteroid.Core.Worlds
                         Translator.realYtoBox2DWorld(screenMP.Y)
                         )
                 };
-            }));
+            });
         }
         void AddActionExecutors()
         {

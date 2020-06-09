@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Asteroid.Core.Render;
 using Microsoft.Xna.Framework;
 
-namespace Asteroid.Core.entities
+namespace Asteroid.Core.Entities
 {
     interface IRenderable
     {

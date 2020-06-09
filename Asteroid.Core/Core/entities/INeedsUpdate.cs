@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asteroid.Core.entities
+namespace Asteroid.Core.Entities
 {
     interface INeedsUpdate
     {

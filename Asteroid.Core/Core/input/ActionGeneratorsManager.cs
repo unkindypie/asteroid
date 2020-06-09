@@ -14,11 +14,11 @@ namespace Asteroid.Core.Input
 {
     //каждый обработчик возвращает данные действия
     delegate RemoteActionBase MouseClickListener(MouseState mouseState);
-    //Класс занимается хранением и вызовом обработчиков ивентов ввода, которые будут
-    // генерирвоать IRemoteAction'ы для дальнейшей их отправки владельцу комнаты и выполнения
+    delegate RemoteActionBase KeyboardEventListener(KeyboardState keyboardState, MouseState mouseState);
+    //Класс занимается вызовом обработчиков ивентов ввода, которые будут
+    // генерирвоать IRemoteAction'ы для дальнейшей отправки владельцу комнаты
     class ActionGeneratorsManager
     {
-        List<MouseClickListener> mouseClickEventListeners = new List<MouseClickListener>();
         TimeSpan lastClickUpd = new TimeSpan(0);
         BaseWorld world;
 
@@ -27,10 +27,10 @@ namespace Asteroid.Core.Input
             this.world = world;
         }
 
-        public void AddMouseClickListener(MouseClickListener listener)
-        {
-            mouseClickEventListeners.Add(listener);
-        }
+        public event MouseClickListener OnMousePress;
+        public event MouseClickListener OnMouseRelease;
+        public event KeyboardEventListener OnKeyPress;
+
 
         public void Update(GameTime gameTime, byte frame, ulong checkpoint)
         {
@@ -38,7 +38,8 @@ namespace Asteroid.Core.Input
                 Mouse.GetState().RightButton == ButtonState.Pressed) &&
                (gameTime.TotalGameTime - lastClickUpd) > new TimeSpan(0, 0, 0, 0, 200))
             {
-                foreach(var listener in mouseClickEventListeners)
+                
+                foreach(MouseClickListener listener in OnMousePress.GetInvocationList())
                 {
                     var result = listener(Mouse.GetState());
                     result.Frame = frame;
@@ -46,10 +47,19 @@ namespace Asteroid.Core.Input
                     if (result != null) {
                         
                         world.NetClient.SendAction(result);
-                        //Task.Run(() => Debug.WriteLine($"Sent action being on {checkpoint}", "client-input"));
                     }
                 }
+                foreach (MouseClickListener listener in OnMouseRelease.GetInvocationList())
+                {
+                    var result = listener(Mouse.GetState());
+                    result.Frame = frame;
+                    result.Checkpoint = checkpoint;
+                    if (result != null)
+                    {
 
+                        world.NetClient.SendAction(result);
+                    }
+                }
                 lastClickUpd = gameTime.TotalGameTime;
             }
         }

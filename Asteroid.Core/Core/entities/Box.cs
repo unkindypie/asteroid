@@ -11,7 +11,7 @@ using Asteroid.Core.Render;
 using Asteroid.Core.Physics.Bodies;
 
 
-namespace Asteroid.Core.entities
+namespace Asteroid.Core.Entities
 {
     class Box : IEntity, IRenderable
     {

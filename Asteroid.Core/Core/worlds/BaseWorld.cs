@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
-using Asteroid.Core.entities;
+using Asteroid.Core.Entities;
 using Asteroid.Core.Physics;
 using Asteroid.Core.Input;
 using Asteroid.Core.Network;

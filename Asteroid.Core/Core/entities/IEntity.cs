@@ -9,7 +9,7 @@ using Asteroid.Core.Physics.Bodies;
 using Asteroid.Core.Render;
 
 
-namespace Asteroid.Core.entities
+namespace Asteroid.Core.Entities
 {
     interface IEntity
     {

@@ -8,7 +8,7 @@ using Box2DX.Common;
 using Asteroid.Core.Physics.Bodies;
 
 
-namespace Asteroid.Core.entities
+namespace Asteroid.Core.Entities
 {
     class InvisibleBorder : IEntity
     {
