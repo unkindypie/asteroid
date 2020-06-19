@@ -38,28 +38,36 @@ namespace Asteroid.Core.Input
                 Mouse.GetState().RightButton == ButtonState.Pressed) &&
                (gameTime.TotalGameTime - lastClickUpd) > new TimeSpan(0, 0, 0, 0, 200))
             {
-                
-                foreach(MouseClickListener listener in OnMousePress.GetInvocationList())
+                if(OnMousePress != null)
                 {
-                    var result = listener(Mouse.GetState());
-                    result.Frame = frame;
-                    result.Checkpoint = checkpoint;
-                    if (result != null) {
-                        
-                        world.NetClient.SendAction(result);
-                    }
-                }
-                foreach (MouseClickListener listener in OnMouseRelease.GetInvocationList())
-                {
-                    var result = listener(Mouse.GetState());
-                    result.Frame = frame;
-                    result.Checkpoint = checkpoint;
-                    if (result != null)
+                    foreach (MouseClickListener listener in OnMousePress.GetInvocationList())
                     {
+                        var result = listener(Mouse.GetState());
+                        result.Frame = frame;
+                        result.Checkpoint = checkpoint;
+                        if (result != null)
+                        {
 
-                        world.NetClient.SendAction(result);
+                            world.NetClient.SendAction(result);
+                        }
                     }
                 }
+
+                if(OnMouseRelease != null)
+                {
+                    foreach (MouseClickListener listener in OnMouseRelease.GetInvocationList())
+                    {
+                        var result = listener(Mouse.GetState());
+                        result.Frame = frame;
+                        result.Checkpoint = checkpoint;
+                        if (result != null)
+                        {
+
+                            world.NetClient.SendAction(result);
+                        }
+                    }
+                }
+              
                 lastClickUpd = gameTime.TotalGameTime;
             }
         }

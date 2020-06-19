@@ -36,6 +36,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Core\Utils\SynchronizedList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core\Utils\Translator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core\Worlds\BaseWorld.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Core\Worlds\PlaygroundWorld.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Core\Worlds\SpaceWorld.cs" />
   </ItemGroup>
   <ItemGroup>
