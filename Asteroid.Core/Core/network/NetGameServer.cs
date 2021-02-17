@@ -19,7 +19,7 @@ namespace Asteroid.Core.Network
     class NetGameServer
     {
         static public readonly ushort RoomHostPort = 2557;
-        static public readonly byte MaxUserCount = 1;
+        static public readonly byte MaxUserCount = 2;
         byte checkpointInterval;
         Thread recieverThread;
 

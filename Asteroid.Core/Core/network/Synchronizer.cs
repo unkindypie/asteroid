@@ -87,7 +87,7 @@ namespace Asteroid.Core.Network
                 }
                 Console.WriteLine("Running own server", "Synchronizer");
                 server = new NetGameServer(checkpointInterval);
-                server.Listen();;
+                server.Listen();
 
                 Thread.Sleep(100);
                 Console.WriteLine("Started scanning...", "Synchronizer");

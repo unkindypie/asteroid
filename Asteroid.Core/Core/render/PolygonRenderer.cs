@@ -70,8 +70,7 @@ namespace Asteroid.Core.Render
             
             graphicsDevice.SetVertexBuffer(vertexBuffer);
             graphicsDevice.Indices = indexBuffer;
-
-
+            
             foreach (EffectPass pass in Camera.CurrentEffect.CurrentTechnique.Passes)
             {
                 pass.Apply();

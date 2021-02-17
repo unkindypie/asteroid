@@ -18,11 +18,11 @@ namespace Asteroid
 {
     public class Asteroid : Game
     {
-        readonly int WINDOW_WIDTH = 1280;
-        readonly int WINDOW_HEIGHT = 720;
+        readonly int WINDOW_WIDTH = 800;
+        readonly int WINDOW_HEIGHT = 600;
 
-        readonly int VIRTUAL_WIDTH = 1280;
-        readonly int VIRTUAL_HEIGHT = 720;
+        readonly int VIRTUAL_WIDTH = 800;
+        readonly int VIRTUAL_HEIGHT = 600;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -60,6 +60,8 @@ namespace Asteroid
             GraphicsDevice.RasterizerState = rs;
             //graphics.GraphicsProfile = GraphicsProfile.HiDef;
             //GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
+
+
             graphics.ApplyChanges();
 
             Translator.ScaleX = (float)WINDOW_WIDTH / (float)VIRTUAL_WIDTH;
